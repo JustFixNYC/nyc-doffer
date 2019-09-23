@@ -1,4 +1,5 @@
 import puppeteer from 'puppeteer';
+import { BBL, Borough } from './bbl';
 
 const BBL_SEARCH_URL = 'https://a836-pts-access.nyc.gov/care/search/commonsearch.aspx?mode=persprop';
 
@@ -17,26 +18,6 @@ const SEARCH_RESULTS = '.SearchResults';
 const SEARCH_SUCCESS = '#datalet_header_row';
 
 const ERROR_TEXT = 'p[style^="color: red"]';
-
-enum Borough {
-  MANHATTAN = 1,
-  BRONX = 2,
-  BROOKLYN = 3,
-  QUEENS = 4,
-  STATEN_ISLAND = 5
-}
-
-class BBL {
-  constructor(readonly borough: Borough, readonly block: number, readonly lot: number) {
-  }
-
-  toString(): string {
-    const borough = this.borough.toString();
-    const block = this.block.toString().padStart(5, '0');
-    const lot = this.lot.toString().padStart(4, '0');
-    return `${borough}${block}${lot}`;
-  }
-}
 
 async function clickAndWaitForNavigation(page: puppeteer.Page, selector: string): Promise<void> {
   await Promise.all([page.waitForNavigation(), page.click(selector)]);
