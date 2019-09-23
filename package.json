@@ -6,7 +6,15 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "start": "tsc --watch"
+    "watch": "tsc --watch",
+    "test": "mocha",
+    "test:watch": "mocha --watch"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.2.3",
+    "@types/mocha": "^5.2.7",
+    "chai": "^4.2.0",
+    "mocha": "^6.2.0"
   },
   "dependencies": {
     "@types/puppeteer": "^1.19.1",
