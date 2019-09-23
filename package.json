@@ -1,0 +1,16 @@
+{
+  "name": "nyc-doffer",
+  "version": "1.0.0",
+  "description": "Experiments with scraping the NYC DOF website.",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc --watch"
+  },
+  "dependencies": {
+    "@types/puppeteer": "^1.19.1",
+    "puppeteer": "^1.20.0",
+    "typescript": "^3.6.3"
+  }
+}
