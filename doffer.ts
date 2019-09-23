@@ -19,6 +19,8 @@ const SEARCH_SUCCESS = '#datalet_header_row';
 
 const ERROR_TEXT = 'p[style^="color: red"]';
 
+const SIDEBAR_LINKS = '#sidemenu li a';
+
 async function clickAndWaitForNavigation(page: puppeteer.Page, selector: string): Promise<void> {
   await Promise.all([page.waitForNavigation(), page.click(selector)]);
 }
@@ -29,7 +31,8 @@ async function clickAndWaitForNavigation(page: puppeteer.Page, selector: string)
  * If multiple searhc results exist for the BBL (e.g., if the BBL has multiple
  * easements on it), only the first is used.
  * 
- * Returns true if the search was successful and tax bills exist for the BBL.
+ * Returns true if the search was successful and tax bills exist for the BBL. The
+ * page will now be at the DOF property page for the BBL.
  * 
  * Returns false if no tax bills exist for the BBL.
  */
@@ -59,4 +62,22 @@ export async function searchForBBL(page: puppeteer.Page, bbl: BBL): Promise<bool
   }
 
   throw new Error('Unexpected failure to search for BBL');
+}
+
+export type SidebarLink = {
+  name: string,
+  href: string
+};
+
+/**
+ * Return information about the sidebar links on a DOF property page.
+ */
+export async function getSidebarLinks(page: puppeteer.Page): Promise<SidebarLink[]> {
+  return page.$$eval(SIDEBAR_LINKS, elements => {
+    return elements.map(el => {
+      const name = (el.textContent || '').trim();
+      const href = (el as HTMLAnchorElement).href;
+      return { name, href };
+    });
+  });
 }

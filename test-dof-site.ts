@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
 
 import { BBL, Borough } from "./bbl";
-import { searchForBBL } from './doffer';
+import { searchForBBL, getSidebarLinks } from './doffer';
 
 async function main(bbls: BBL[]) {
   console.log('Launching browser...');
@@ -13,6 +13,8 @@ async function main(bbls: BBL[]) {
       const found = await searchForBBL(page, bbl);
       if (found) {
         console.log(`Found tax bill for BBL ${bbl}.`);
+        const links = await getSidebarLinks(page);
+        console.log(JSON.stringify(links, null, 2));
       } else {
         console.log(`Tax bill for BBL ${bbl} does not exist.`);
       }
