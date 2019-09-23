@@ -3,5 +3,5 @@
 ```
 yarn
 yarn build
-node doffer.js
+node test-dof-site.js
 ```
