@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { expect } from 'chai';
-import { FileSystemCache, CacheGetter } from '../cache';
+import { FileSystemCache, CacheGetter } from '../lib/cache';
 
 // https://gist.github.com/tkihira/2367067
 var recursiveRmdirSync = function(dir: string) {

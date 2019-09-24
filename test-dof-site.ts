@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
 
-import { BBL, Borough } from "./bbl";
-import { searchForBBL, getSidebarLinks, gotoSidebarLink } from './doffer';
+import { BBL, Borough } from "./lib/bbl";
+import { searchForBBL, gotoSidebarLink } from './lib/dof';
 
 async function main(bbls: BBL[]) {
   console.log('Launching browser...');

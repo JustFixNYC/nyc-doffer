@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer';
 import { BBL } from './bbl';
+import { clickAndWaitForNavigation } from './page-util';
 
 const BBL_SEARCH_URL = 'https://a836-pts-access.nyc.gov/care/search/commonsearch.aspx?mode=persprop';
 
@@ -20,10 +21,6 @@ const SEARCH_SUCCESS = '#datalet_header_row';
 const ERROR_TEXT = 'p[style^="color: red"]';
 
 const SIDEBAR_LINKS = '#sidemenu li a';
-
-async function clickAndWaitForNavigation(page: puppeteer.Page, selector: string): Promise<void> {
-  await Promise.all([page.waitForNavigation(), page.click(selector)]);
-}
 
 /**
  * Search for the given BBL on the NYC DOF site using the given Puppeteer page.

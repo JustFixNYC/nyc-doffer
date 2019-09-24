@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { BBL, Borough } from "../bbl";
+import { BBL, Borough } from "../lib/bbl";
 
 describe("BBL", () => {
   it("has padded BBL as string representation", () => {
