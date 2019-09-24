@@ -22,6 +22,11 @@ const ERROR_TEXT = 'p[style^="color: red"]';
 
 const SIDEBAR_LINKS = '#sidemenu li a';
 
+export enum SidebarLinkName {
+  noticesOfPropertyValue = 'Notices of Property Value',
+  propertyTaxBills = 'Property Tax Bills'
+}
+
 /**
  * Search for the given BBL on the NYC DOF site using the given Puppeteer page.
  * 
@@ -62,7 +67,7 @@ export async function searchForBBL(page: puppeteer.Page, bbl: BBL): Promise<bool
 }
 
 export type SidebarLink = {
-  name: string,
+  name: SidebarLinkName,
   href: string
 };
 
@@ -72,7 +77,7 @@ export type SidebarLink = {
 export async function getSidebarLinks(page: puppeteer.Page): Promise<SidebarLink[]> {
   return page.$$eval(SIDEBAR_LINKS, elements => {
     return elements.map(el => {
-      const name = (el.textContent || '').trim();
+      const name = (el.textContent || '').trim() as SidebarLinkName;
       const href = (el as HTMLAnchorElement).href;
       return { name, href };
     });
@@ -82,7 +87,7 @@ export async function getSidebarLinks(page: puppeteer.Page): Promise<SidebarLink
 /**
  * Go to the DOF property page sidebar link with the given name.
  */
-export async function gotoSidebarLink(page: puppeteer.Page, name: string): Promise<void> {
+export async function gotoSidebarLink(page: puppeteer.Page, name: SidebarLinkName): Promise<void> {
   const links = await getSidebarLinks(page);
   const link = links.filter(l => l.name === name)[0];
   if (!link) {

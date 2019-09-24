@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
 
 import { BBL, Borough } from "./lib/bbl";
-import { searchForBBL, gotoSidebarLink } from './lib/dof';
+import { searchForBBL, gotoSidebarLink, SidebarLinkName } from './lib/dof';
 
 async function main(bbls: BBL[]) {
   console.log('Launching browser...');
@@ -13,7 +13,7 @@ async function main(bbls: BBL[]) {
       const found = await searchForBBL(page, bbl);
       if (found) {
         console.log(`Found DOF property page for BBL ${bbl}.`);
-        for (let name of ['Notices of Property Value', 'Property Tax Bills']) {
+        for (let name of Object.values(SidebarLinkName)) {
           console.log(`Visiting sidebar link "${name}".`);
           await gotoSidebarLink(page, name);
         }
@@ -31,7 +31,7 @@ async function main(bbls: BBL[]) {
 }
 
 // A BBL with property tax bills and no easements.
-const BBL_654_PARK_PLACE = new BBL(Borough.BROOKLYN, 1238, 16);
+export const BBL_654_PARK_PLACE = new BBL(Borough.BROOKLYN, 1238, 16);
 
 // A BBL with property tax bill and an easement.
 const BBL_40_RIVER_ROAD = new BBL(Borough.MANHATTAN, 1373, 1);
@@ -39,7 +39,9 @@ const BBL_40_RIVER_ROAD = new BBL(Borough.MANHATTAN, 1373, 1);
 // A nonexistent BBL.
 const BBL_NONEXISTENT = new BBL(Borough.MANHATTAN, 1373, 999);
 
-main([BBL_654_PARK_PLACE, BBL_40_RIVER_ROAD, BBL_NONEXISTENT]).catch(e => {
-  console.error(e);
-  process.exit(1);
-});
+if (module.parent === null) {
+  main([BBL_654_PARK_PLACE, BBL_40_RIVER_ROAD, BBL_NONEXISTENT]).catch(e => {
+    console.error(e);
+    process.exit(1);
+  });
+}
