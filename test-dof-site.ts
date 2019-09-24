@@ -1,7 +1,7 @@
 import puppeteer from 'puppeteer';
 
 import { BBL, Borough } from "./bbl";
-import { searchForBBL, getSidebarLinks } from './doffer';
+import { searchForBBL, getSidebarLinks, gotoSidebarLink } from './doffer';
 
 async function main(bbls: BBL[]) {
   console.log('Launching browser...');
@@ -12,11 +12,13 @@ async function main(bbls: BBL[]) {
       const bbl = bbls[i];
       const found = await searchForBBL(page, bbl);
       if (found) {
-        console.log(`Found tax bill for BBL ${bbl}.`);
-        const links = await getSidebarLinks(page);
-        console.log(JSON.stringify(links, null, 2));
+        console.log(`Found DOF property page for BBL ${bbl}.`);
+        for (let name of ['Notices of Property Value', 'Property Tax Bills']) {
+          console.log(`Visiting sidebar link "${name}".`);
+          await gotoSidebarLink(page, name);
+        }
       } else {
-        console.log(`Tax bill for BBL ${bbl} does not exist.`);
+        console.log(`DOF property page for BBL ${bbl} does not exist.`);
       }
       const path = `screenshot_${bbl}.png`;
       await page.screenshot({ path });

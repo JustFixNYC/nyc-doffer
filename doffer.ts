@@ -81,3 +81,15 @@ export async function getSidebarLinks(page: puppeteer.Page): Promise<SidebarLink
     });
   });
 }
+
+/**
+ * Go to the DOF property page sidebar link with the given name.
+ */
+export async function gotoSidebarLink(page: puppeteer.Page, name: string): Promise<void> {
+  const links = await getSidebarLinks(page);
+  const link = links.filter(l => l.name === name)[0];
+  if (!link) {
+    throw new Error(`Sidebar link not found: ${name}`);
+  }
+  await page.goto(link.href);
+}
