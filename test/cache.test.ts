@@ -33,7 +33,7 @@ describe('FileSystemCache', () => {
 
       const value = await cache.get('foo/bar/123', async (key: string) => {
         expect(key).to.equal('foo/bar/123');
-        return new Buffer('boop');
+        return Buffer.from('boop', 'utf-8');
       });
       expect(value.toString()).to.equal('boop');
 

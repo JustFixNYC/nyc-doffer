@@ -30,7 +30,7 @@ class PageGetter {
       }
     }
     await gotoSidebarLink(this.page, linkName);
-    return new Buffer(await getPageHTML(this.page), CACHE_HTML_ENCODING);
+    return Buffer.from(await getPageHTML(this.page), CACHE_HTML_ENCODING);
   }
 
   async getCachedPageHTML(bbl: BBL, linkName: SidebarLinkName, cache: Cache, cacheSubkey: string): Promise<string> {
