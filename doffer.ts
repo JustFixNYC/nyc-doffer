@@ -2,7 +2,7 @@ import path from 'path';
 import puppeteer from 'puppeteer';
 
 import { BBL_654_PARK_PLACE } from "./test-dof-site";
-import { FileSystemCache } from './lib/cache';
+import { FileSystemCache, Cache } from './lib/cache';
 import { BBL } from './lib/bbl';
 import { searchForBBL, gotoSidebarLink, SidebarLinkName } from './lib/dof';
 import { getPageHTML } from './lib/page-util';
@@ -33,6 +33,14 @@ class PageGetter {
     return new Buffer(await getPageHTML(this.page), CACHE_HTML_ENCODING);
   }
 
+  async getCachedPageHTML(bbl: BBL, linkName: SidebarLinkName, cache: Cache, cacheSubkey: string): Promise<string> {
+    const buf = await cache.get(
+      `html/${bbl}_${cacheSubkey}.html`,
+      () => this.getPage(bbl, linkName)
+    );
+    return buf.toString(CACHE_HTML_ENCODING);
+  }
+
   async shutdown() {
     this.bbl = null;
     if (this.page) {
@@ -52,13 +60,8 @@ async function main(bbl: BBL) {
 
   try {
     const page = SidebarLinkName.noticesOfPropertyValue;
-    const cacheSubkey = 'nopv';
-    const buf = await cache.get(
-      `html/${bbl}_${cacheSubkey}.html`,
-      () => pageGetter.getPage(bbl, page)
-    );
-    console.log(`Found ${buf.length} bytes of HTML for "${page}" page.`);
-    const html = buf.toString(CACHE_HTML_ENCODING);
+    const html = await pageGetter.getCachedPageHTML(bbl, page, cache, 'nopv');
+    console.log(`Found ${html.length} characters of HTML for "${page}" page.`);
     // TODO: Find PDF links in HTML page and download them.
   } finally {
     await pageGetter.shutdown();
