@@ -6,6 +6,8 @@ import { FileSystemCache, Cache } from './lib/cache';
 import { BBL } from './lib/bbl';
 import { searchForBBL, gotoSidebarLink, SidebarLinkName, parseNOPVLinks } from './lib/dof';
 import { getPageHTML } from './lib/page-util';
+import { download } from './lib/download';
+import { getISODate } from './lib/util';
 
 const CACHE_DIR = path.join(__dirname, '.dof-cache');
 
@@ -41,6 +43,13 @@ class PageGetter {
     return buf.toString(CACHE_HTML_ENCODING);
   }
 
+  async downloadPDFToCache(bbl: BBL, url: string, cache: Cache, cacheSubkey: string): Promise<Buffer> {
+    return cache.get(`pdf/${bbl}_${cacheSubkey}.pdf`, () => {
+      console.log(`Downloading ${url}...`);
+      return download(url);
+    });
+  }
+
   async shutdown() {
     this.bbl = null;
     if (this.page) {
@@ -62,7 +71,10 @@ async function main(bbl: BBL) {
     const page = SidebarLinkName.noticesOfPropertyValue;
     const html = await pageGetter.getCachedPageHTML(bbl, page, cache, 'nopv');
     const links = parseNOPVLinks(html);
-    console.log(JSON.stringify(links, null, 2));
+    for (let link of links) {
+      await pageGetter.downloadPDFToCache(bbl, link.url, cache, `nopv-${getISODate(link.date)}`);
+    }
+    console.log("Done.");
   } finally {
     await pageGetter.shutdown();
   }
