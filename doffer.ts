@@ -9,6 +9,7 @@ import { getPageHTML } from './lib/page-util';
 import { download } from './lib/download';
 import { getISODate } from './lib/util';
 import { convertPDFToText } from './lib/pdf-to-text';
+import { extractNetOperatingIncome } from './lib/extract-noi';
 
 const CACHE_DIR = path.join(__dirname, '.dof-cache');
 
@@ -88,6 +89,10 @@ async function main(bbl: BBL) {
       const subkey = `nopv-${date}`;
       const pdfData = await pageGetter.downloadPDFToCache(bbl, link.url, cache, subkey);
       const text = await pageGetter.convertAndCachePDFToText(bbl, pdfData, cache, subkey);
+      const noi = extractNetOperatingIncome(text);
+      if (noi) {
+        console.log(`The net operating income for ${link.period} is ${noi}.`);
+      }
     }
     console.log("Done.");
   } finally {
