@@ -3,16 +3,21 @@
 You will need `pdftotext` on your path. This is contained in the
 [Xpdf command line tools](https://www.xpdfreader.com/download.html).
 
-To install, build, and run the app:
+To install and build the app:
 
 ```
 yarn
 yarn build
-node doffer.js
 ```
 
 Note that you will need to run `yarn build` whenever you change the code. Alternatively,
 run `yarn watch` in a separate terminal.
+
+You can run the tool by passing it an address to search for, e.g.:
+
+```
+node doffer.js "654 park place, brooklyn"
+```
 
 ## Running tests
 
