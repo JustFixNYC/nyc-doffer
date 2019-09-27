@@ -4,7 +4,7 @@ import puppeteer from 'puppeteer';
 import { BBL_654_PARK_PLACE } from "./test-dof-site";
 import { FileSystemCache, Cache } from './lib/cache';
 import { BBL } from './lib/bbl';
-import { searchForBBL, gotoSidebarLink, SidebarLinkName } from './lib/dof';
+import { searchForBBL, gotoSidebarLink, SidebarLinkName, parseNOPVLinks } from './lib/dof';
 import { getPageHTML } from './lib/page-util';
 
 const CACHE_DIR = path.join(__dirname, '.dof-cache');
@@ -61,8 +61,8 @@ async function main(bbl: BBL) {
   try {
     const page = SidebarLinkName.noticesOfPropertyValue;
     const html = await pageGetter.getCachedPageHTML(bbl, page, cache, 'nopv');
-    console.log(`Found ${html.length} characters of HTML for "${page}" page.`);
-    // TODO: Find PDF links in HTML page and download them.
+    const links = parseNOPVLinks(html);
+    console.log(JSON.stringify(links, null, 2));
   } finally {
     await pageGetter.shutdown();
   }

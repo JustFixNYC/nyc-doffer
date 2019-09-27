@@ -1,6 +1,9 @@
 import puppeteer from 'puppeteer';
+import cheerio from 'cheerio';
+
 import { BBL } from './bbl';
 import { clickAndWaitForNavigation } from './page-util';
+import { parseDate } from './util';
 
 const BBL_SEARCH_URL = 'https://a836-pts-access.nyc.gov/care/search/commonsearch.aspx?mode=persprop';
 
@@ -94,4 +97,38 @@ export async function gotoSidebarLink(page: puppeteer.Page, name: SidebarLinkNam
     throw new Error(`Sidebar link not found: ${name}`);
   }
   await page.goto(link.href);
+}
+
+/** Represents a link to a Notice of Property Value PDF. */
+export type NOPVLink = {
+  /** The period, e.g. "Revised 2015 - 2016". */
+  period: string,
+  /** The statement date. */
+  date: Date,
+  /** The URL to the PDF of the statement. */
+  url: string
+};
+
+/**
+ * Attempt to scrape Notice of Property Value (NOPV) links from the NOPV page
+ * on the NYC DOF site.
+ */
+export function parseNOPVLinks(html: string): NOPVLink[] {
+  const links: NOPVLink[] = [];
+  const $ = cheerio.load(html);
+
+  $('table[id="Notices of Property Value"] tr').each((i, el) => {
+    const cells = $('td', el);
+    if (cells.length < 2) return;
+    const period = $(cells[0]).text().trim();
+    if (!period) return;
+    const link = $('a', cells[1])[0];
+    if (!link) return;
+    const date = parseDate($(link).text().trim());
+    const url = link.attribs['href'];
+    if (!date || !url) return;
+    links.push({period, date, url});
+  });
+
+  return links;
 }
