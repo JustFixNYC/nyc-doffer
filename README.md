@@ -1,10 +1,14 @@
 ## Installation
 
-To install, run:
+You will need `pdftotext` on your path. This is contained in the
+[Xpdf command line tools](https://www.xpdfreader.com/download.html).
+
+To install, build, and run the app:
 
 ```
 yarn
 yarn build
+node doffer.js
 ```
 
 Note that you will need to run `yarn build` whenever you change the code. Alternatively,
