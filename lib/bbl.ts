@@ -16,4 +16,19 @@ export class BBL {
     const lot = this.lot.toString().padStart(4, '0');
     return `${borough}${block}${lot}`;
   }
+
+  static from(bbl: string): BBL {
+    if (!isPaddedBBL(bbl)) {
+      throw new Error(`"${bbl}" is not a padded BBL`);
+    }
+    
+    const borough = parseInt(bbl[0]) as Borough;
+    const block = parseInt(bbl.slice(1, 6));
+    const lot = parseInt(bbl.slice(6));
+    return new BBL(borough, block, lot);
+  }
+}
+
+export function isPaddedBBL(text: string): boolean {
+  return /^[12345]\d\d\d\d\d\d\d\d\d$/.test(text);
 }

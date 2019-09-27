@@ -31,7 +31,7 @@ async function main(bbls: BBL[]) {
 }
 
 // A BBL with property tax bills and no easements.
-export const BBL_654_PARK_PLACE = new BBL(Borough.BROOKLYN, 1238, 16);
+const BBL_654_PARK_PLACE = new BBL(Borough.BROOKLYN, 1238, 16);
 
 // A BBL with property tax bill and an easement.
 const BBL_40_RIVER_ROAD = new BBL(Borough.MANHATTAN, 1373, 1);

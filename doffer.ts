@@ -1,15 +1,15 @@
 import path from 'path';
 import puppeteer from 'puppeteer';
 
-import { BBL_654_PARK_PLACE } from "./test-dof-site";
 import { FileSystemCache, Cache } from './lib/cache';
 import { BBL } from './lib/bbl';
-import { searchForBBL, gotoSidebarLink, SidebarLinkName, parseNOPVLinks } from './lib/dof';
+import { searchForBBL, gotoSidebarLink, SidebarLinkName, parseNOPVLinks, NOPVLink } from './lib/dof';
 import { getPageHTML } from './lib/page-util';
 import { download } from './lib/download';
 import { getISODate } from './lib/util';
 import { convertPDFToText } from './lib/pdf-to-text';
 import { extractNetOperatingIncome } from './lib/extract-noi';
+import { getFirstGeoSearchResult, GeoSearchProperties } from './lib/geosearch';
 
 const CACHE_DIR = path.join(__dirname, '.dof-cache');
 
@@ -76,20 +76,48 @@ class PageGetter {
   }
 }
 
-async function main(bbl: BBL) {
+/**
+ * Attempt to geolocate the given search text and return the result, using
+ * a cached value if possible.
+ */
+async function geoSearchAndCache(text: string, cache: Cache): Promise<GeoSearchProperties|null> {
+  const simpleText = text.replace(/[^a-z0-9\- ]/g, '');
+  const cacheKey = `geosearch/${simpleText.replace(/ /g, '_')}.json`;
+  const result = await cache.get(cacheKey, async () => {
+    console.log(`Geocoding "${simpleText}"...`);
+    const info = await getFirstGeoSearchResult(simpleText);
+    return Buffer.from(JSON.stringify(info, null, 2), 'utf-8');
+  });
+  return JSON.parse(result.toString('utf-8'));
+}
+
+type DOFPropertyInfo = {
+  link: NOPVLink,
+  noi: string|null
+};
+
+/** Performs the main CLI program on the given BBL. */
+async function mainForBBL(bbl: BBL, cache: Cache) {
   const pageGetter = new PageGetter();
-  const cache = new FileSystemCache(CACHE_DIR);
+  const results: DOFPropertyInfo[] = [];
 
   try {
     const page = SidebarLinkName.noticesOfPropertyValue;
     const html = await pageGetter.getCachedPageHTML(bbl, page, cache, 'nopv');
     const links = parseNOPVLinks(html);
+
+    // Gather data.
     for (let link of links) {
       const date = getISODate(link.date);
       const subkey = `nopv-${date}`;
       const pdfData = await pageGetter.downloadPDFToCache(bbl, link.url, cache, subkey);
       const text = await pageGetter.convertAndCachePDFToText(bbl, pdfData, cache, subkey);
       const noi = extractNetOperatingIncome(text);
+      results.push({link, noi});
+    }
+
+    // Report data.
+    for (let {link, noi} of results) {
       if (noi) {
         console.log(`The net operating income for ${link.period} is ${noi}.`);
       }
@@ -100,9 +128,36 @@ async function main(bbl: BBL) {
   }
 }
 
+/** The main CLI program. */
+async function main(argv: string[]) {
+  const searchText = argv[2];
+
+  if (!searchText) {
+    throw new GracefulError(`Usage: doffer.js <search text>`);
+  }
+
+  const cache = new FileSystemCache(CACHE_DIR);
+  const geo = await geoSearchAndCache(searchText, cache);
+  if (!geo) {
+    throw new GracefulError("The search text is invalid.");
+  }
+  const bbl = BBL.from(geo.pad_bbl);
+  console.log(`Searching NYC DOF website for BBL ${bbl} (${geo.name}, ${geo.borough}).`);
+
+  return mainForBBL(bbl, cache);
+}
+
+/** Error subclass that represents a graceful failure of the CLI. */
+class GracefulError extends Error {
+}
+
 if (module.parent === null) {
-  main(BBL_654_PARK_PLACE).catch(e => {
-    console.error(e);
+  main(process.argv).catch(e => {
+    if (e instanceof GracefulError) {
+      e.message && console.log(e.message);
+    } else {
+      console.error(e);
+    }
     process.exit(1);
   });
 }
