@@ -8,10 +8,13 @@ import { searchForBBL, gotoSidebarLink, SidebarLinkName, parseNOPVLinks } from '
 import { getPageHTML } from './lib/page-util';
 import { download } from './lib/download';
 import { getISODate } from './lib/util';
+import { convertPDFToText } from './lib/pdf-to-text';
 
 const CACHE_DIR = path.join(__dirname, '.dof-cache');
 
 const CACHE_HTML_ENCODING = 'utf-8';
+
+const CACHE_TEXT_ENCODING = 'utf-8';
 
 class PageGetter {
   private browser: puppeteer.Browser|null = null;
@@ -50,6 +53,15 @@ class PageGetter {
     });
   }
 
+  async convertAndCachePDFToText(bbl: BBL, pdfData: Buffer, cache: Cache, cacheSubkey: string): Promise<string> {
+    const convert = async () => {
+      console.log(`Converting PDF to text...`);
+      return Buffer.from(await convertPDFToText(pdfData), CACHE_TEXT_ENCODING);
+    };
+    const buf = await cache.get(`txt/${bbl}_${cacheSubkey}.txt`, convert);
+    return buf.toString(CACHE_TEXT_ENCODING);
+  }
+
   async shutdown() {
     this.bbl = null;
     if (this.page) {
@@ -72,7 +84,10 @@ async function main(bbl: BBL) {
     const html = await pageGetter.getCachedPageHTML(bbl, page, cache, 'nopv');
     const links = parseNOPVLinks(html);
     for (let link of links) {
-      await pageGetter.downloadPDFToCache(bbl, link.url, cache, `nopv-${getISODate(link.date)}`);
+      const date = getISODate(link.date);
+      const subkey = `nopv-${date}`;
+      const pdfData = await pageGetter.downloadPDFToCache(bbl, link.url, cache, subkey);
+      const text = await pageGetter.convertAndCachePDFToText(bbl, pdfData, cache, subkey);
     }
     console.log("Done.");
   } finally {
