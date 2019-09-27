@@ -5,6 +5,8 @@ import https from 'https';
  * 
  * This function is pretty primitive and doesn't support timeouts, redirects,
  * or other fancy things.
+ * 
+ * An error is raised if the HTTP status code isn't 200.
  */
 export async function download(url: string): Promise<Buffer> {
   const chunks: Buffer[] = [];
