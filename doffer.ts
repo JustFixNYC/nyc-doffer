@@ -10,6 +10,7 @@ import { getISODate } from './lib/util';
 import { convertPDFToText } from './lib/pdf-to-text';
 import { extractNetOperatingIncome } from './lib/extract-noi';
 import { getFirstGeoSearchResult, GeoSearchProperties } from './lib/geosearch';
+import { extractRentStabilizedUnits } from './lib/extract-rentstab-units';
 
 const CACHE_DIR = path.join(__dirname, '.dof-cache');
 
@@ -117,7 +118,7 @@ async function getNOPVInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Prom
 }
 
 type SOAInfo = SOALink & {
-  // TODO: Add data points here.
+  rentStabilizedUnits: number|null,
 };
 
 async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Promise<SOAInfo[]> {
@@ -132,9 +133,9 @@ async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Promi
 
     const date = getISODate(link.date);
     const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, cache, `soa-${date}`);
+    const rentStabilizedUnits = extractRentStabilizedUnits(text);
 
-    // TODO: Extract some data points from the SOA.
-    results.push({...link});
+    results.push({...link, rentStabilizedUnits});
   }
 
   return results;
@@ -153,6 +154,13 @@ async function mainForBBL(bbl: BBL, cache: Cache) {
         console.log(`The net operating income for ${period} is ${noi}.`);
       }
     }
+
+    for (let {period, rentStabilizedUnits} of soaInfo) {
+      if (rentStabilizedUnits) {
+        console.log(`During ${period}, the property had ${rentStabilizedUnits} rent stabilized units.`);
+      }
+    }
+
     console.log("Done.");
   } finally {
     await pageGetter.shutdown();
