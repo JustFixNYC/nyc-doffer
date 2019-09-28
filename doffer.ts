@@ -57,17 +57,13 @@ class PageGetter {
     });
   }
 
-  async cachedConvertPDFToText(bbl: BBL, pdfData: Buffer, cache: Cache, cacheSubkey: string, extraFlags?: PDFToTextFlags[]): Promise<string> {
-    const extraKey = `pdftotext-${EXPECTED_PDFTOTEXT_VERSION}` + (extraFlags || []).join('');
-    return asTextCache(cache, CACHE_TEXT_ENCODING).get(`txt/${bbl}_${cacheSubkey}_${extraKey}.txt`, () => {
+  async cachedDownloadAndConvertPDFToText(bbl: BBL, url: string, cache: Cache, cacheSubkey: string, extraFlags?: PDFToTextFlags[]): Promise<string> {
+    const pdfToTextKey = `pdftotext-${EXPECTED_PDFTOTEXT_VERSION}` + (extraFlags || []).join('');
+    return asTextCache(cache, CACHE_TEXT_ENCODING).get(`txt/${bbl}_${cacheSubkey}_${pdfToTextKey}.txt`, async () => {
+      const pdfData = await this.cachedDownloadPDF(bbl, url, cache, cacheSubkey);
       console.log(`Converting PDF to text...`);
       return convertPDFToText(pdfData, extraFlags);
     });
-  }
-
-  async cachedDownloadAndConvertPDFToText(bbl: BBL, url: string, cache: Cache, cacheSubkey: string, extraFlags?: PDFToTextFlags[]): Promise<string> {
-    const pdfData = await this.cachedDownloadPDF(bbl, url, cache, cacheSubkey);
-    return this.cachedConvertPDFToText(bbl, pdfData, cache, cacheSubkey, extraFlags);
   }
 
   async shutdown() {
