@@ -113,7 +113,6 @@ async function getNOPVInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Prom
   return results;
 }
 
-
 /** Performs the main CLI program on the given BBL. */
 async function mainForBBL(bbl: BBL, cache: Cache) {
   const pageGetter = new PageGetter();
