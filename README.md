@@ -1,7 +1,13 @@
 ## Installation
 
-You will need `pdftotext` on your path. This is contained in the
-[Xpdf command line tools](https://www.xpdfreader.com/download.html).
+You will need `pdftotext` version 4.02 on your path, or defined via the
+`PDFTOTEXT` environment variable (if an `.env` file is found in the root directory
+of the repository, it will be loaded). You can obtain it by downloading
+and installing one of the following:
+
+* [Xpdf command line tools (Linux)](https://xpdfreader-dl.s3.amazonaws.com/xpdf-tools-linux-4.02.tar.gz)
+* [Xpdf command line tools (Windows)](https://xpdfreader-dl.s3.amazonaws.com/xpdf-tools-win-4.02.zip)
+* [Xpdf command line tools (OS X)](https://xpdfreader-dl.s3.amazonaws.com/xpdf-tools-mac-4.02.tar.gz)
 
 To install and build the app:
 

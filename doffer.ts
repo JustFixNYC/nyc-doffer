@@ -1,5 +1,6 @@
 import path from 'path';
 import puppeteer from 'puppeteer';
+import dotenv from 'dotenv';
 
 import { FileSystemCache, Cache, asTextCache, asJSONCache } from './lib/cache';
 import { BBL } from './lib/bbl';
@@ -7,10 +8,12 @@ import { searchForBBL, gotoSidebarLink, SidebarLinkName, parseNOPVLinks, NOPVLin
 import { getPageHTML } from './lib/page-util';
 import { download } from './lib/download';
 import { getISODate } from './lib/util';
-import { convertPDFToText } from './lib/pdf-to-text';
+import { convertPDFToText, PDFToTextFlags, EXPECTED_PDFTOTEXT_VERSION } from './lib/pdf-to-text';
 import { extractNetOperatingIncome } from './lib/extract-noi';
 import { getFirstGeoSearchResult, GeoSearchProperties } from './lib/geosearch';
 import { extractRentStabilizedUnits } from './lib/extract-rentstab-units';
+
+dotenv.config();
 
 const CACHE_DIR = path.join(__dirname, '.dof-cache');
 
@@ -54,16 +57,17 @@ class PageGetter {
     });
   }
 
-  async cachedConvertPDFToText(bbl: BBL, pdfData: Buffer, cache: Cache, cacheSubkey: string): Promise<string> {
-    return asTextCache(cache, CACHE_TEXT_ENCODING).get(`txt/${bbl}_${cacheSubkey}.txt`, () => {
+  async cachedConvertPDFToText(bbl: BBL, pdfData: Buffer, cache: Cache, cacheSubkey: string, extraFlags?: PDFToTextFlags[]): Promise<string> {
+    const extraKey = `pdftotext-${EXPECTED_PDFTOTEXT_VERSION}` + (extraFlags || []).join('');
+    return asTextCache(cache, CACHE_TEXT_ENCODING).get(`txt/${bbl}_${cacheSubkey}_${extraKey}.txt`, () => {
       console.log(`Converting PDF to text...`);
-      return convertPDFToText(pdfData);
+      return convertPDFToText(pdfData, extraFlags);
     });
   }
 
-  async cachedDownloadAndConvertPDFToText(bbl: BBL, url: string, cache: Cache, cacheSubkey: string): Promise<string> {
+  async cachedDownloadAndConvertPDFToText(bbl: BBL, url: string, cache: Cache, cacheSubkey: string, extraFlags?: PDFToTextFlags[]): Promise<string> {
     const pdfData = await this.cachedDownloadPDF(bbl, url, cache, cacheSubkey);
-    return this.cachedConvertPDFToText(bbl, pdfData, cache, cacheSubkey);
+    return this.cachedConvertPDFToText(bbl, pdfData, cache, cacheSubkey, extraFlags);
   }
 
   async shutdown() {
@@ -109,7 +113,7 @@ async function getNOPVInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Prom
   // Gather data.
   for (let link of links) {
     const date = getISODate(link.date);
-    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, cache, `nopv-${date}`);
+    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, cache, `nopv-${date}`, ['-layout']);
     const noi = extractNetOperatingIncome(text);
     results.push({...link, noi});
   }
@@ -132,7 +136,7 @@ async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Promi
     if (link.quarter !== 1) continue;
 
     const date = getISODate(link.date);
-    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, cache, `soa-${date}`);
+    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, cache, `soa-${date}`, ['-table']);
     const rentStabilizedUnits = extractRentStabilizedUnits(text);
 
     results.push({...link, rentStabilizedUnits});
