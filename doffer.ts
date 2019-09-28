@@ -91,35 +91,42 @@ async function geoSearchAndCache(text: string, cache: Cache): Promise<GeoSearchP
   return JSON.parse(result.toString('utf-8'));
 }
 
-type DOFPropertyInfo = {
-  link: NOPVLink,
+/** Information about a BBL's Notice of Property Value (NOPV) for a particular period. */
+type NOPVInfo = NOPVLink & {
+  /** The BBL's Net Operating Income (NOI) for the period. */
   noi: string|null
 };
+
+/** Retrieves and extracts all information related to a BBL's Notices of Property Value. */
+async function getNOPVInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Promise<NOPVInfo[]>  {
+  const results: NOPVInfo[] = [];
+
+  const page = SidebarLinkName.noticesOfPropertyValue;
+  const html = await pageGetter.getCachedPageHTML(bbl, page, cache, 'nopv');
+  const links = parseNOPVLinks(html);
+
+  for (let link of links) {
+    const date = getISODate(link.date);
+    const subkey = `nopv-${date}`;
+    const pdfData = await pageGetter.downloadPDFToCache(bbl, link.url, cache, subkey);
+    const text = await pageGetter.convertAndCachePDFToText(bbl, pdfData, cache, subkey);
+    const noi = extractNetOperatingIncome(text);
+    results.push({...link, noi});
+  }
+
+  return results;
+}
 
 /** Performs the main CLI program on the given BBL. */
 async function mainForBBL(bbl: BBL, cache: Cache) {
   const pageGetter = new PageGetter();
-  const results: DOFPropertyInfo[] = [];
 
   try {
-    const page = SidebarLinkName.noticesOfPropertyValue;
-    const html = await pageGetter.getCachedPageHTML(bbl, page, cache, 'nopv');
-    const links = parseNOPVLinks(html);
+    const nopvInfo = await getNOPVInfo(pageGetter, bbl, cache);
 
-    // Gather data.
-    for (let link of links) {
-      const date = getISODate(link.date);
-      const subkey = `nopv-${date}`;
-      const pdfData = await pageGetter.downloadPDFToCache(bbl, link.url, cache, subkey);
-      const text = await pageGetter.convertAndCachePDFToText(bbl, pdfData, cache, subkey);
-      const noi = extractNetOperatingIncome(text);
-      results.push({link, noi});
-    }
-
-    // Report data.
-    for (let {link, noi} of results) {
+    for (let {period, noi} of nopvInfo) {
       if (noi) {
-        console.log(`The net operating income for ${link.period} is ${noi}.`);
+        console.log(`The net operating income for ${period} is ${noi}.`);
       }
     }
     console.log("Done.");
