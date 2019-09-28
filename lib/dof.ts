@@ -132,3 +132,42 @@ export function parseNOPVLinks(html: string): NOPVLink[] {
 
   return links;
 }
+
+/** Represents a link to a Statement of Account (SOA) PDF. */
+export type SOALink = {
+  /** The period, e.g. "2018-2019". */
+  period: string,
+  /** The statement quarter (1-4). */
+  quarter: number,
+  /** The statement date. */
+  date: Date,
+  /** The URL to the PDF of the statement. */
+  url: string
+};
+
+/**
+ * Attempt to scrape Statement of Account (SOA) links from the Property Tax Bills page
+ * on the NYC DOF site.
+ */
+export function parseSOALinks(html: string): SOALink[] {
+  const links: SOALink[] = [];
+  const $ = cheerio.load(html);
+
+  $('table[id="Property Tax Bills"] tr').each((i, el) => {
+    const cells = $('td', el);
+    if (cells.length < 3) return;
+    const period = $(cells[0]).text().trim();
+    if (!period) return;
+    const link = $('a', cells[2])[0];
+    if (!link) return;
+    const match = $(link).text().trim().match(/^Q([1-4]): (.*)$/);
+    if (!match) return;
+    const quarter = parseInt(match[1]);
+    const date = parseDate(match[2].trim());
+    const url = link.attribs['href'];
+    if (!date || !url) return;
+    links.push({period, quarter, date, url});
+  });
+
+  return links;
+}

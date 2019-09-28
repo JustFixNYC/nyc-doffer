@@ -1,0 +1,873 @@
+<html xmlns:mpc=""><head runat="server">
+    <title>NYC Finance</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=9">
+    <meta http-equiv="Keywords" content="CAMA, Assessment Administration, Tax">
+    <meta http-equiv="Description" content="iasWorld">
+    <meta name="Copyright" content="Tyler Technologies Inc, Akanda Solutions, LLC"> 
+    <link rel="icon" href="https://a836-pts-access.nyc.gov/CAREfavicon.ico" type="image/x-icon">
+    <link rel="shortcut icon" href="https://a836-pts-access.nyc.gov/CAREfavicon.ico" type="image/x-icon">
+    <meta http-equiv="pragma" content="no-cache">
+<link rel="stylesheet" href="https://a836-pts-access.nyc.gov/CARE/styles/font-awesome.min.css" type="text/css"><link rel="stylesheet" href="https://a836-pts-access.nyc.gov/CARE/styles/styles.css" type="text/css"><link rel="stylesheet" href="https://a836-pts-access.nyc.gov/CARE/styles/custom/override-NYC.css" type="text/css"></head><body id="thebody" class="normalpage"><div id="pagewrapper"><div id="divSMaint" style="display:none;border-bottom:2px solid red;width:780"><table cellpadding="0" cellspacing="0" width="780"><tbody><tr id="trSMaint" class="MessageBar" style="height:21px;vertical-align:middle;"><td id="tdSMaint">&nbsp;The System is currently unavailable due to maintenance.  Please check again later.</td><td id="tdTimer" align="right"></td><td align="right" valign="middle" onmouseout="ChangeImage('out')" onmouseover="ChangeImage('over')"><img id="CloseMsgBar" src="../images/icons/Set1/closeicon-normal.gif" height="14px" alt="Hide Bar" style="vertical-align:middle; border:solid 1px white; cursor:pointer" onclick="HideBar()">&nbsp;</td></tr></tbody></table></div><script type="text/javascript" language="javascript">function HideBar() { document.getElementById('divSMaint').style.display='none';SoapInvokeService(WS_ACCESS_MANAGER, 'HideBar', null, false)}function ChangeImage(el) { var img = document.getElementById('CloseMsgBar'); if (el == 'out') img.src = img.src.replace('closeicon-mouseover.gif', 'closeicon-normal.gif');  else img.src = img.src.replace('closeicon-normal.gif', 'closeicon-mouseover.gif'); }</script><input type="hidden" id="hdDefHelp" value="0"><input type="hidden" id="hdThisFile" value="datalets/datalet.aspx"><div id="outerheader"><div id="middleheader">
+
+<header>
+<div id="header">
+<div class="sitelogocontainer">
+<a href="http://www1.nyc.gov/site/finance/index.page" id="aIASWLink" target="_blank"><div class="sitelogo"></div></a>
+</div>
+<div class="HeaderSiteTitle"></div>
+<div id="rightsection" class="HeaderLinks">
+<span id="RoleValue" class="HeaderLinks">
+</span><span id="lbRole"></span>
+
+<span id="lbHelp"><a class="Headerlinks Help" href="javascript:showHelp('')">
+<img src="../images/common/icons/050.png" alt="Help"></a> &nbsp;&nbsp; </span>
+
+</div>
+</div>
+</header>
+
+<nav>
+<div id="topmenu"><ul><li id="pd_Parent" class="unsel" onmouseover="menuOver_pd(&quot;pd_189&quot;, event, this)" onmouseout="menuOut(&quot;pd_189&quot;, event, this)"><a href="../forms/externallink.aspx?mode=http://www1.nyc.gov/site/finance/index.page" target=""><span>.<span style="font-size: 7"></span></span></a></li><li class="sel"><a href="../search/commonsearch.aspx?mode=address" target=""><span>Property Information</span></a></li><li class="unsel"><a href="../forms/externallink.aspx?mode=https://www1.nyc.gov/site/finance/benefits/property-related-benefits.page" target="_blank"><span>Apply for Exemptions</span></a></li><li class="unsel"><a href="../forms/externallink.aspx?mode=http://www1.nyc.gov/site/finance/about/contact-us.page" target="_blank"><span>Get Help</span></a></li></ul></div>
+<div id="secondarytopmenu"><ul><li class="unsel"><a href="../search/commonsearch.aspx?mode=address" target=""><span>Property Address Search</span></a></li><li class="unsel"><a href="../search/commonsearch.aspx?mode=persprop" target=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; BBL Search &nbsp; &nbsp; &nbsp;&nbsp;&nbsp;</span></a></li><li class="unsel"><a href="../search/commonsearch.aspx?mode=realprop" target=""><span>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; REUC Search &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></a></li></ul></div>
+</nav>
+<script language="Javascript" src="../Script/Menu.js"></script>
+<div id="pd_189" class="PullDownMenuLayer" style="visibility:hidden; position: absolute; width:50; top:0; left:0" onmouseover="bMenuOn=true" onmouseout="menuOut(this.id)">
+<div class="PullDownMenuItem"><a class="PullDownMenuItem" onclick="location=&quot;../forms/externallink.aspx?mode=http://www1.nyc.gov/site/finance/index.page&quot;" onmouseover="this.className=&quot;MenuRowHL&quot;" onmouseout="menuLinkOut(this); this.className=&quot;PullDownMenuItem&quot;" onmousedown="this.className=&quot;MenuRowClicked&quot;">&nbsp;&nbsp;&nbsp;</a></div></div>
+<script type="text/javascript" src="../script/soap.js?190207125324"></script>
+<script type="text/javascript" src="../script/Common.js?130729042306"></script>
+<script type="text/javascript">
+
+function HeaderClick(link) {
+var par = window.parent;
+if (par == window) return true;
+var op = par.opener;
+if (op == null) return true;
+if (op.HeaderClick == null) return true;
+var id = link.id;
+var el = op.document.getElementById(id);
+if (el == null) return true;
+if (!confirm("This command will close the current window.\nDo you want to proceed?")) return false;
+
+if (document.createEvent) {
+var evt = document.createEvent('MouseEvents');
+evt.initEvent('click', true, false);
+el.dispatchEvent(evt);
+} else if (typeof el.onclick == 'function') {
+el.click();
+}
+
+par.close();
+op.focus();
+return false;
+}
+
+function SetMyHome(url) {
+var DLG_SETMYHOME = "center:yes; dialogHeight:180px; dialogWidth:240px; help:no; resizable:no; status:no; title:no";
+window.showModalDialog('../Forms/SetMyHome.aspx?url=' + url, null, DLG_SETMYHOME);
+}
+
+
+function ShowSimpleHelp(url) {
+var DLG_POPUP = "scrollbar= yes, height=600, Width=800, resizable=yes, status=no, titlebar=no";
+if (url.indexOf("?") > 0) {
+url += "&";
+} else {
+url += "?";
+}
+window.open(url, null, DLG_POPUP);
+}
+
+function ViewCompleted() {
+var url = "../Maintain/ReportSpool.aspx?simple=1&runningJobs=0&batchJobs=2";
+window.open(url, "Reports", "status=1, toolbar=0, height=650px, width=1000px, resizable=1, scrollbars=yes");
+}
+
+function PopupWindow2(url) {
+var DLG_POPUP = "dialogLeft:0; dialogTop: 0; edge: sunken; scroll: yes; center:yes; dialogHeight:750; dialogWidth:1028; help:no; resizable:yes; status:no; title:no";
+if (url.indexOf("?") > 0) {
+url += "&";
+} else {
+url += "?";
+}
+url += "frameset=1";
+window.showModalDialog(url, null, DLG_POPUP);
+}
+
+var gLastPopup = parseInt(Math.random() * 10);
+
+function PopupWindow(url, noToolbar, name) {
+var win = null;
+
+if (name == null)
+name = "";
+else
+name = name.replace(' ', "");
+
+if (win == null) {
+if (name == null || name.length == 0) name = "popup" + (gLastPopup++ % 10);
+var params;
+if (noToolbar) {
+params = "fullscreen=no, titlebar=no, location=no, menubar=no, toolbar=no, resizable=yes, scrollbars=yes, status=yes, titlebar=yes";
+} else {
+params = null;
+}
+win = window.open(url, name, params);
+}
+return win;
+}
+
+function setRole(val, form) {
+var url = window.location.href;
+url = url.replace("#", "");
+var i = url.indexOf("&");
+if (i != -1) {
+url = url.substr(0, i);
+}
+var pars = SoapBuildInputParam("SelectedRole", val);
+pars += SoapBuildInputParam("URL", url);
+var res = SoapInvokeService(WS_PUBLIC, "AssignSelectedRole", pars);
+if (res == -1) {
+location.href = "../Main/Home.aspx";
+}
+else {
+location.reload();
+}
+}
+</script>
+</div></div><div id="wrapper" class="center"><div id="sidemenu" valign="top" class="columns" style="width:200; "><nav><div class="contentpanel"><div id="sidemenu"><li class="unsel"><a href="../datalets/datalet.aspx?mode=profileall2&amp;sIndex=0&amp;idx=1&amp;LMparent=20" target=""><span>Property Info</span></a></li><li class="unsel"><a href="../datalets/datalet_input.aspx?mode=account_balance&amp;sIndex=0&amp;idx=1&amp;LMparent=20" target=""><span>Account Balance</span></a></li><li class="unsel"><a href="../datalets/datalet.aspx?mode=acc_hist_summ&amp;sIndex=0&amp;idx=1&amp;LMparent=20" target=""><span>Account History</span></a></li><li class="unsel"><a href="../datalets/datalet.aspx?mode=nopv&amp;sIndex=0&amp;idx=1&amp;LMparent=20" target=""><span>Notices of Property Value</span></a></li><li class="sel"><a href="../datalets/datalet.aspx?mode=soa_docs&amp;sIndex=0&amp;idx=1&amp;LMparent=20" target=""><span>Property Tax Bills</span></a></li><li class="unsel"><a href="../datalets/datalet.aspx?mode=benefits_pers&amp;sIndex=0&amp;idx=1&amp;LMparent=20" target=""><span>Benefits - Prop. Owners</span></a></li><li class="unsel"><a href="../datalets/datalet.aspx?mode=benefits_comm&amp;sIndex=0&amp;idx=1&amp;LMparent=20" target=""><span>Benefits - Business &amp; Construction</span></a></li><li class="unsel"><a href="../datalets/datalet.aspx?mode=benefits_gov_nonprofit&amp;sIndex=0&amp;idx=1&amp;LMparent=20" target=""><span>Benefits - Gov &amp; Non-Prof</span></a></li><li class="unsel"><a href="../datalets/datalet.aspx?mode=asmt_parent&amp;sIndex=0&amp;idx=1&amp;LMparent=20" target=""><span>Market Values &amp; Assessments</span></a></li><li class="unsel"><a href="../datalets/datalet.aspx?mode=asmt_fin_2020&amp;sIndex=0&amp;idx=1&amp;LMparent=20" target=""><span>&nbsp; &nbsp; &nbsp; 2019-2020 Final</span></a></li><li class="unsel"><a href="../datalets/datalet.aspx?mode=asmt_hist&amp;sIndex=0&amp;idx=1&amp;LMparent=20" target=""><span>&nbsp; &nbsp; &nbsp; Current &amp; Prior Years</span></a></li></div></div></nav></div><section><div id="bodyarea">
+
+<script>
+var bOnLoad = false;
+</script>
+<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+<style>
+.holder { /*width:400px;*/ position:relative; }
+.columns { float: none !important; }
+</style>
+
+<form name="frmMain" method="POST" action="./datalet.aspx?mode=soa_docs&amp;sIndex=0&amp;idx=1&amp;LMparent=20" id="frmMain" style="position:relative; top:-5px;">
+<div>
+<input type="hidden" name="__EVENTTARGET" id="__EVENTTARGET" value="">
+<input type="hidden" name="__EVENTARGUMENT" id="__EVENTARGUMENT" value="">
+<input type="hidden" name="__LASTFOCUS" id="__LASTFOCUS" value="">
+<input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE" value="">
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+var theForm = document.forms['frmMain'];
+if (!theForm) {
+theForm = document.frmMain;
+}
+function __doPostBack(eventTarget, eventArgument) {
+if (!theForm.onsubmit || (theForm.onsubmit() != false)) {
+theForm.__EVENTTARGET.value = eventTarget;
+theForm.__EVENTARGUMENT.value = eventArgument;
+theForm.submit();
+}
+}
+//]]>
+</script>
+
+
+<div>
+
+<input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION" value="hn2ag1xmGfnDxtFeyFJoDRO1UheNKnA+rog7TdmFZvvYUG3kQmoUInNbAID+8dgJFEAlyDg+LkC19BjJG/N2T+S3bI2ZrMfLS9PKsmh+qOhS2Jv7DuBNqNdZvEwdyNgTQnpVy9dKxpcOj7V3Lv/BfUiD2i7dHoqr4+E63cVCTlT2E8ZPeLv6mfFeJdWS9UEuyP6pg77MPjbi57NccqihGcWgq7d57VvjdJDkgx49BkMxd7QeIVsSXMVhEFYW3N25EcXs8ZEebNCF9QdAZQlvUO67O3GisRD41NJdenOYIRppZ8QahAIn6/oEuuORz9EruutUL/TzrVAZCSUQmLmc3qxziRoYbtOorEUoWMEWG54/0eEoahRiCyjRqvJrrbX/5BGnBeatodT83YPTgAND8AQmTwTeqDe7kBQcXtLwVaM9bxJcCBZV3HPEa12P1IneV43rbf5avaU2Xa3DTnDNwQ==">
+</div>
+
+<div style="position:relative; top: 5px;" class="columns">
+<div class="contentpanel"><div style="min-width:500px; min-height:450px;max-width:1600px;   vertical-align:top;">
+<!--Container for datalet-->  
+<table style="vertical-align:top;" width="600px" cellpadding="2" cellspacing="2">
+<tbody><tr>
+<td valign="top" width="80%">
+<table border="0" cellpadding="0" cellspacing="0" width="100%" class="WidgetBar" align="center">
+<tbody><tr id="datalet_header_row">
+<td>
+<!--?xml version="1.0" encoding="utf-16"?--><table width="100%" border="0" cellspacing="0" cellpadding="0"><tbody><tr class="DataletHeaderTop" height="1"><td class="DataletHeaderBottom" width="50%" align="left" valign="top" colspan="2">654 PARK PLACE #8</td><td class="DataletHeaderBottom" width="50%" align="right" valign="top" colspan="2">Borough:&nbsp;BROOKLYN</td></tr><tr class="DataletHeaderTop" height="1"><td class="DataletHeaderBottom" width="50%" align="left" valign="top" colspan="2"></td><td class="DataletHeaderBottom" width="50%" align="right" valign="top" colspan="2">Block:&nbsp;1238 Lot: 16</td></tr><tr height="1" class="BannerTabs"><td colspan="4" height="1" valign="top" width="100%"></td></tr><tr><td colspan="4" height="10" valign="top" width="100%"></td></tr></tbody></table>
+
+</td>
+</tr> 
+<tr>
+<td>
+<div class="holder">
+    <div id="datalet_div_1" name="SOA_DOCS_2_V2" highlighted="False"><table align="center" width="100%" border="0" bordercolor="black" cellpadding="1" cellspacing="0"><tbody><tr><td colspan="3" class="DataletTitleColor"><font size="-1">Property Tax Bills</font></td></tr></tbody></table><hr><table id="Property Tax Bills" border="0" width="100%"><tbody><tr><td class="DataletTopHeading" align="right" bgcolor="#ffffff"></td><td class="DataletTopHeading" align="left" bgcolor="#ffffff"></td><td class="DataletTopHeading" align="right" bgcolor="#ffffff"></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2019-2020</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-edms.nyc.gov/dctm-rest/repositories/dofedmspts/StatementSearch?bbl=3012380016&amp;stmtDate=20190829&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q2: August    29, 2019</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2019-2020</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-edms.nyc.gov/dctm-rest/repositories/dofedmspts/StatementSearch?bbl=3012380016&amp;stmtDate=20190605&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q1: June      05, 2019</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData"></td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData"></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2018-2019</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20190201&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q4: February  01, 2019</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2018-2019</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20181116&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q3: November  16, 2018</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2018-2019</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20180824&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q2: August    24, 2018</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2018-2019</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20180601&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q1: June      01, 2018</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData"></td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData"></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2017-2018</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20180223&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q4: February  23, 2018</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2017-2018</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20171117&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q3: November  17, 2017</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2017-2018</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20170825&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q2: August    25, 2017</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2017-2018</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20170602&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q1: June      02, 2017</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData"></td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData"></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2016-2017</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20170224&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q4: February  24, 2017</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2016-2017</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20161118&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q3: November  18, 2016</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2016-2017</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20160826&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q2: August    26, 2016</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2016-2017</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20160603&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q1: June      03, 2016</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData"></td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData"></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2015-2016</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20160219&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q4: February  19, 2016</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2015-2016</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20151120&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q3: November  20, 2015</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2015-2016</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20150821&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q2: August    21, 2015</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2015-2016</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20150605&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q1: June      05, 2015</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData"></td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData"></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2014-2015</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20150220&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q4: February  20, 2015</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2014-2015</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20141121&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q3: November  21, 2014</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2014-2015</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20140822&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q2: August    22, 2014</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2014-2015</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20140606&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q1: June      06, 2014</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData"></td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData"></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2013-2014</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20140221&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q4: February  21, 2014</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2013-2014</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20131122&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q3: November  22, 2013</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2013-2014</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20130823&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q2: August    23, 2013</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2013-2014</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20130607&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q1: June      07, 2013</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData"></td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData"></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2012-2013</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20130222&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q4: February  22, 2013</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2012-2013</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20121130&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q3: November  30, 2012</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2012-2013</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20120817&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q2: August    17, 2012</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2012-2013</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20120608&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q1: June      08, 2012</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData"></td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData"></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2011-2012</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20120224&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q4: February  24, 2012</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2011-2012</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20111118&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q3: November  18, 2011</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2011-2012</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20110826&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q2: August    26, 2011</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2011-2012</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20110610&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q1: June      10, 2011</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData"></td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData"></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2010-2011</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20110218&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q4: February  18, 2011</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2010-2011</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20101119&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q3: November  19, 2010</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2010-2011</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20100827&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q2: August    27, 2010</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2010-2011</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20100611&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q1: June      11, 2010</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData"></td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData"></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2009-2010</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20100226&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q4: February  26, 2010</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2009-2010</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20091120&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q3: November  20, 2009</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2009-2010</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20090828&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q2: August    28, 2009</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData">2009-2010</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20090606&amp;stmtType=SOA" rel="noopener noreferrer" target="_blank"><font color="#000000"><u> Q1: June      06, 2009</u></font></a></td></tr><tr><td valign="top" align="right" bgcolor="#ffffff" nowrap="" class="DataletData"></td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">&nbsp; &nbsp;</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData"></td></tr><tr><td colspan="3" height="1" valign="top" width="100%"></td></tr></tbody></table><font size="0px"><br></font></div><div id="datalet_div_2" name="SOA_DOCS_DRIE_SCRIE_V2" highlighted="False"><table align="center" width="100%" border="0" bordercolor="black" cellpadding="1" cellspacing="0"><tbody><tr><td colspan="3" class="DataletTitleColor"><font size="-1">DRIE/SCRIE Statements of Account</font></td></tr></tbody></table><hr><table id="DRIE/SCRIE Statements of Account" border="0" width="100%"><tbody><tr><td class="DataletTopHeading" align="left" bgcolor="#ffffff">Date Mailed</td><td class="DataletTopHeading" align="left" bgcolor="#ffffff">Type</td><td class="DataletTopHeading" align="left" bgcolor="#ffffff"></td></tr><tr><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">2019-06-02</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">SCRIE</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-edms.nyc.gov/dctm-rest/repositories/dofedmspts/StatementSearch?bbl=3012380016&amp;stmtDate=20190602&amp;stmtType=SCR" rel="noopener noreferrer" target="_blank"><font color="#000000"><u>Download</u></font></a></td></tr><tr><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">2018-11-16</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">SCRIE</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20181116&amp;stmtType=SCR" rel="noopener noreferrer" target="_blank"><font color="#000000"><u>Download</u></font></a></td></tr><tr><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">2018-06-01</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">SCRIE</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20180601&amp;stmtType=SCR" rel="noopener noreferrer" target="_blank"><font color="#000000"><u>Download</u></font></a></td></tr><tr><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">2018-02-23</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">SCRIE</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20180223&amp;stmtType=SCR" rel="noopener noreferrer" target="_blank"><font color="#000000"><u>Download</u></font></a></td></tr><tr><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">2017-08-25</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">SCRIE</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20170825&amp;stmtType=SCR" rel="noopener noreferrer" target="_blank"><font color="#000000"><u>Download</u></font></a></td></tr><tr><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">2013-06-07</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">SCRIE</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20130607&amp;stmtType=SCR" rel="noopener noreferrer" target="_blank"><font color="#000000"><u>Download</u></font></a></td></tr><tr><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">2013-02-22</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">SCRIE</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20130222&amp;stmtType=SCR" rel="noopener noreferrer" target="_blank"><font color="#000000"><u>Download</u></font></a></td></tr><tr><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">2012-11-30</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">SCRIE</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20121130&amp;stmtType=SCR" rel="noopener noreferrer" target="_blank"><font color="#000000"><u>Download</u></font></a></td></tr><tr><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">2012-08-17</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">SCRIE</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20120817&amp;stmtType=SCR" rel="noopener noreferrer" target="_blank"><font color="#000000"><u>Download</u></font></a></td></tr><tr><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">2012-06-08</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">SCRIE</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20120608&amp;stmtType=SCR" rel="noopener noreferrer" target="_blank"><font color="#000000"><u>Download</u></font></a></td></tr><tr><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">2012-02-24</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">SCRIE</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20120224&amp;stmtType=SCR" rel="noopener noreferrer" target="_blank"><font color="#000000"><u>Download</u></font></a></td></tr><tr><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">2011-08-26</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">SCRIE</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20110826&amp;stmtType=SCR" rel="noopener noreferrer" target="_blank"><font color="#000000"><u>Download</u></font></a></td></tr><tr><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">2010-11-19</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">SCRIE</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20101119&amp;stmtType=SCR" rel="noopener noreferrer" target="_blank"><font color="#000000"><u>Download</u></font></a></td></tr><tr><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">2010-06-11</td><td valign="top" align="left" bgcolor="#ffffff" nowrap="" class="DataletData">SCRIE</td><td valign="top" align="left" bgcolor="#ffffff" class="DataletData"><a href="https://a836-mspuvw-dofptsz.nyc.gov/PTSCM/StatementSearch?bbl=3012380016&amp;stmtDate=20100611&amp;stmtType=SCR" rel="noopener noreferrer" target="_blank"><font color="#000000"><u>Download</u></font></a></td></tr><tr><td colspan="3" height="1" valign="top" width="100%"></td></tr></tbody></table><font size="0px"><br></font></div>
+
+
+</div>
+</td>
+</tr>					
+<tr>
+<td align="center">
+<div class="holder">
+    
+</div>
+</td>
+</tr>
+<tr>
+<td align="center">
+<div class="holder">
+    
+</div>
+</td>
+</tr>
+<tr>
+<td align="center">
+<div class="holder">
+    
+</div>
+</td>
+</tr>
+
+</tbody></table>
+</td>
+
+</tr>
+</tbody></table>
+
+</div></div>
+</div>
+
+<!--Column for Side Widget-->
+
+<div style="position:relative; top: 5px;" class="columns">
+<div class="contentpanel"><div style="align: left; vertical-align:top; width:160px; overflow:hidden;">
+<!--Container Right hand panel-->  
+<table border="0" cellpadding="0" cellspacing="0" class="WidgetBar" align="center">
+<tbody><tr id="trTaxYear">
+<td class="DataletHeader" align="right">
+
+<!-- record navigator: start -->
+
+
+<script type="text/javascript">
+(function (window) {
+if (!Tyler) { var Tyler = {}; }
+Tyler.SyncWindow = function (paramCallback) {
+var m_isEnabled = ("False" == "True");
+var m_winRef = null;
+var m_paramCallback = paramCallback;
+var m_winName = "SyncWindow_" + "a836ptsaccessnycgovCARE";
+var m_url = "../Forms/SyncWindow.aspx";
+var m_lastQueryString = "";
+var me = this;
+
+this.IsEnabled = function () {
+/// <summary>returns true if SyncWindow feature is enabled, false otherwise</summary>
+/// <returns>boolean</returns>
+return m_isEnabled;
+}
+
+this.SetCallback = function (callback) {
+/// <summary>Sets the parameter callback function to be called by the SyncWindow.Open method</summary>
+/// <returns>void</returns>
+m_paramCallback = callback;
+}
+
+this.Open = function () {
+/// <summary>(re)loads the SyncWindow window by passing a URL to it containing qeurystring parameters
+/// built using the parameter callback function</summary>
+/// <returns>void</returns>
+if (m_isEnabled) {
+var parms = null;
+if (m_paramCallback) parms = m_paramCallback();
+if (parms != null) {
+var qs = "";
+for (var key in parms) {
+if (qs.length > 0) qs += "&";
+qs += key + "=" + parms[key];
+}
+if ("#" + qs != m_lastQueryString) {
+m_winRef = window.open(m_url + "#" + qs, m_winName);
+}
+}
+}
+}
+
+this.Listen = function (el, evt) {
+/// <summary>Registers the SyncWindow object as a listener of an event</summary>
+/// <param name='el'>HTML element</param>
+/// <param name='evt'>string event name</param>
+/// <returns>void</returns>
+if (el.addEventListener) {
+el.addEventListener(evt, this.Open);
+}
+else {
+el.attachEvent("on" + evt, this.Open);
+}
+}
+
+this.GetBrowserWindowRef = function () {
+/// <summary>Returns a browser window refernce for the window that was created by the SyncWindow object</summary>
+/// <returns>browser window ref</returns>
+return m_winRef;
+}
+}
+
+window.SyncWindow = new Tyler.SyncWindow();
+}) (window);
+</script>
+
+
+
+
+<input name="DTLNavigator$idx" type="hidden" id="DTLNavigator_idx" value="1">
+<br><br><table class="WidgetBar" cellspacing="0" cellpadding="0" width="130" border="0">
+
+<tbody><tr align="middle">
+<td nowrap="" align="middle" width="130">
+<table cellspacing="1" cellpadding="1" width="100%" align="center" border="0">
+<tbody><tr valign="middle">
+<td valign="middle" align="middle" nowrap="noWrap" style="width: 25px; vertical-align: middle;">
+
+
+</td>
+<td width="100%" valign="middle" align="center">
+<input name="DTLNavigator$txtFromTo" type="text" id="DTLNavigator_txtFromTo" style="font-size: 11px; color: #3d6599; width: 100%; border-top-style: groove; border-right-style: groove; border-left-style: groove; border-bottom-style: groove; border-bottom-width: 1px; border-top-width: 1px; border-right-width: 1px; border-left-width: 1px; border-bottom-color: #3d6599; border-top-color: #3d6599; border-right-color: #3d6599; border-left-color: #3d6599; height: 100%; background-color: white; text-align: center; vertical-align: top;" readonly="READONLY" value="1 of 1">
+</td>
+<td valign="middle" align="middle" nowrap="noWrap" style="width: 25px; vertical-align: middle;">&nbsp;
+
+</td>
+</tr>
+</tbody></table>
+</td>
+</tr>
+
+
+
+
+<tr>
+<td align="middle">
+<table cellspacing="0" cellpadding="0" width="100%" align="center" border="0">
+<tbody><tr>
+<td nowrap="" align="middle" width="100%"><a href="https://a836-pts-access.nyc.gov/care/search/CommonSearch.aspx?mode=PERSPROP&amp;sIndex=0&amp;mod=LastSearch" id="DTLNavigator_searchResultsAnchor"><font class="RightLinkFont1">
+<span id="ml" class="SideBarTabs">Return to Search Results</span></font></a>
+</td>
+</tr>
+</tbody></table>
+</td>
+</tr>
+
+
+<tr style="height: 6px;">
+<td></td>
+</tr>
+<tr>
+<td>
+<hr>
+</td>
+</tr>
+<tr align="left" style="height: 25px;">
+<td class="SideBarHeading" style="height: 8px; text-align: left;">Actions</td>
+
+</tr>
+<tr align="left">
+<td></td>
+</tr>
+
+
+
+<tr valign="middle">
+
+</tr>
+
+<tr valign="middle">
+
+</tr>
+
+<tr valign="middle">
+
+</tr>
+
+<tr>
+<td id="DTLNavigator_lbPrintAll" align="left">
+<a href="javascript:PrintDatalet('all')">
+<img alt="Show all data in a printer friendly version" border="no" onclick="PrintDatalet()" src="../images/new/print.png">
+<font class="SideBarTabs" valign="middle"><span style="vertical-align:top;">Printable Summary</span></font>
+</a>
+</td>
+
+</tr>
+
+<tr>
+<td id="DTLNavigator_lbPrintThis" valign="middle" align="left">
+<a href="javascript:PrintDatalet()">
+<img alt="Show this page in a printer friendly version" border="no" onclick="PrintDatalet()" src="../images/new/print.png">
+<font class="SideBarTabs"><span style="vertical-align:top;">Printable Version</span></font>
+</a>
+</td>
+
+</tr>
+
+
+<!--new workflow stuff starts here-->
+
+<tr>
+<td>
+
+</td>
+</tr>
+<tr align="left">
+<td align="left">
+
+</td>
+</tr>
+
+<tr>
+<td>
+<hr>
+</td>
+</tr>
+<tr align="left" style="height: 25px;">
+<td class="SideBarHeading" style="height: 8px; text-align: left;">
+<div id="DTLNavigator_divExtraLinksLabel">More Info</div>
+</td>
+
+</tr>
+<tr>
+<td valign="middle" align="left">
+<div id="DTLNavigator_dvAnyLinks">
+
+
+<style type="text/css">
+.auto-style1 {
+color: #333333;
+font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+}
+</style>
+
+
+
+
+
+
+
+<a href="http://www1.nyc.gov/site/finance/taxes/pts-faq.page" target="_blank">
+<span class="auto-style1"><u>FAQ</u></span></a>
+
+<br>
+<br>
+
+
+</div>
+</td>
+</tr>
+
+</tbody></table>
+<input name="DTLNavigator$hdRecCount" type="hidden" id="DTLNavigator_hdRecCount" value="1">
+<input type="hidden" id="hdXPin" name="hdXPin" value="3012380016">
+<input type="hidden" id="hdXJur" name="hdXJur" value="65">
+<input type="hidden" id="hdXTaxYr" name="hdXTaxYr" value="2020">
+<input name="DTLNavigator$hdTaxYear" type="hidden" id="DTLNavigator_hdTaxYear">
+<input type="hidden" id="hdXUserName" name="hdXUserName" value="Default">
+
+<script> 
+
+var customReportBuilderRows= 0;
+var bImplementsAjaxRecordNavigator = false;
+var hasCustomReportBuilder = false;
+
+function OpenContactUs(id) {
+var parid = document.getElementById("hdXPin").value;
+var jur = document.getElementById("hdXJur").value;
+var taxyr = document.getElementById("hdXTaxYr").value;
+var ddtaxyr = document.getElementById("ddTaxYear");
+if (ddtaxyr != null) {
+taxyr = ddtaxyr.value;
+}
+
+var url = '/contactus/#/contact/'+id + '/' + jur + "/" + parid + "/" + taxyr+ "/";
+
+
+window.open(url,"_blank");
+}
+
+
+function CheckSyncWindow() {
+if (window.SyncWindow.IsEnabled()) {
+window.SyncWindow.SetCallback(GetSyncWindowParams);
+window.SyncWindow.Open();
+if (bImplementsAjaxRecordNavigator) {
+el = document.getElementById("DTLNavigator_imageFirst");
+if (el!=null) window.SyncWindow.Listen(el, "click");
+el = document.getElementById("DTLNavigator_imagePrevious");
+if (el!=null) window.SyncWindow.Listen(el, "click");
+el = document.getElementById("DTLNavigator_imageNext");
+if (el!=null) window.SyncWindow.Listen(el, "click");
+el = document.getElementById("DTLNavigator_imageLast");
+if (el!=null) window.SyncWindow.Listen(el, "click");
+
+}
+}
+}
+
+function GetSyncWindowParams() {
+//debugger;
+var sPinVal = document.getElementById("hdXPin").value;
+if (sPinVal != "") {
+var sUserNameVal = document.getElementById("hdXUserName").value;
+var sJurVal = document.getElementById("hdXJur").value;
+var sTaxYearVal = document.getElementById("hdXTaxYr").value;
+var parms = {
+"USERNAME": sUserNameVal,
+"JUR": sJurVal,
+"PARID": sPinVal,
+"TAXYR": sTaxYearVal
+};
+return parms;
+}
+else {
+return null;
+}
+}
+
+//window.attachEvent("onload", CheckSyncWindow);
+
+function OpenIMEdit(param) {
+var url = "../Maintain/SelectTransForEdit.aspx?frameset=1&" + param;
+var dlg = "center:yes; dialogHeight:500px; dialogWidth:500px; help:no; resizable:yes; status:no; title:no";
+var iMUrl = window.showModalDialog(url, null, dlg);
+if (iMUrl != null) {
+var name = "iMaintainTransaction";
+var s = "location=no, resizable=yes, status=yes, menubar=no"
+window.open(iMUrl, name, s);
+}
+}
+
+function EditThis() {
+var parid = document.getElementById("hdXPin").value;
+var jur = document.getElementById("hdXJur").value;
+var taxyr = document.getElementById("hdXTaxYr").value;
+var ddtaxyr = document.getElementById("DTLNavigator_ddTaxYear");
+if (ddtaxyr != null) {
+taxyr = ddtaxyr.value;
+}
+
+OpenIMEdit("pin=" + parid + "&jur=" + jur + "&taxyr=" + taxyr);
+}
+function CreateWorkflow() {
+var WS_WF = "../ActivityCenter/Services/WF.asmx";
+
+var pars = SoapBuildInputParam("recordCount", 1);
+var ret = SoapInvokeService(WS_WF, "CanUserCreateWorkflow", pars, false);
+if (ret) {
+ret = ret.replace("[br]", "\n");
+ret = ret.replace("[br]", "\n");
+ret = ret.replace("[br][br]", "\n\n");
+alert(ret);
+return;  // user is not allowed to create workflow
+}
+
+var parid = document.getElementById("hdXPin").value;
+var jur = document.getElementById("hdXJur").value;
+var taxyr = document.getElementById("hdXTaxYr").value;
+var ddtaxyr = document.getElementById("ddTaxYear");
+if (ddtaxyr != null) {
+taxyr = ddtaxyr.value;
+}
+//var url = "../activitycenter/eventpublisher/publishevents.aspx?parid=" + parid + "&jur=" + jur + "&taxyear=" + taxyr;
+var url = "../activitycenter/eventpublisher/publishevents.aspx?parid=" + jur + ":" + parid + ":" + taxyr;
+var dlg = "center:yes; dialogHeight:800px; dialogWidth:500px; help:no; resizable:no; status:no; title:no; scroll:off;";
+window.showModalDialog(url, null, dlg);
+}
+//scripts for Action Links **********************************
+function NBHDSearch(pin) {
+var url = "../Search/NbhdSearch.aspx?pin=" + pin + "&fromDL=yes";
+url += "&idx=" + sIdx + "&sIndex=" + sIndex;
+//	alert(url);
+document.frmMain.hdSkip.value = 1;
+document.location.href = url;
+}
+function ProximitySearch(pin) {
+var url = "../Search/proximitysearch.aspx?pin=" + pin + "&fromDL=yes";
+url += "&idx=" + sIdx + "&sIndex=" + sIndex;    
+document.frmMain.hdSkip.value = 1;
+document.location.href = url;
+}
+function PrintDatalet(val) {
+var doc = document.frmMain;
+var url = '../Datalets/PrintDatalet.aspx?pin=' + doc.hdPin.value +
+'&gsp=' + doc.hdMode.value + '&taxyear=' + doc.hdTaxYear.value +
+'&jur=' + doc.hdJur.value + '&ownseq=' + doc.hdOwnSeq.value +
+'&card=' + doc.hdCard.value + '&roll=' + roll +
+'&State=' + doc.hdMask.value + '&item=' + doc.hdItem.value +
+'&items=' + doc.hdItems.value + '&all=' + val + "&ranks=" + ranks;
+window.open(url, 'Print', "location=no, scrollbars=yes, menubar=yes, resizable=yes, width=900");
+}
+
+function CreateComparables() {
+var url = "../Forms/Comparables.aspx?showSearch=1&sIndex=" + sIndex + "&idx=" + sIdx;
+window.location.href = url;
+}
+
+$(document).ready(function () {
+
+if(hasCustomReportBuilder)
+{
+getLeftMenuLinks();
+}       
+});    
+
+function getLeftMenuLinks(){    
+
+var links = [];
+if($('#sidemenu')){
+
+$('#sidemenu').find('a').each(function() {
+
+var href = $(this).attr('href');
+var dataletLabel = $(this).find('span').text();        
+if(href.indexOf('datalet.aspx') != -1)
+{
+var stringArray  = href.split("=");
+var idx = stringArray[1].indexOf('&');
+if(idx != -1)
+{
+var dataletName = stringArray[1].substr(0, idx);
+links.push({ Name: dataletName, Label: dataletLabel, Position: 0})                  
+}
+}
+
+if(href.indexOf('photoview.aspx' ) != -1 || href.indexOf('photoviewfixed.aspx') != -1){
+links.push({ Name: "PHOTO", Label: dataletLabel })   
+}
+if(href.indexOf('map.aspx') != -1){
+links.push({ Name: "MAP", Label: dataletLabel })   
+}
+if(href.indexOf('sketchframe.aspx') != -1){
+links.push({ Name: "SKETCH", Label: dataletLabel })   
+}
+if(href.indexOf('pictometryipa.aspx') != -1){
+links.push({ Name: "PICTOMETRY", Label: dataletLabel })   
+}
+});
+
+customReportBuilderRows = links.length;
+
+var request = $.ajax({
+dataType: "json",
+url: "../api/printformdata/links",
+method: "POST",
+data: { '': links },
+//success: openCustomReportBuilderWindow()        
+});
+}    
+}
+
+function openCustomReportBuilderWindow(){
+
+var doc = document.frmMain;   
+
+var url = '../Datalets/CustomReportBuilder/printForm.html?pin=' + doc.hdPin.value +
+'&gsp=' + doc.hdMode.value + '&taxyear=' + doc.hdTaxYear.value +
+'&jur=' + doc.hdJur.value + '&ownseq=' + doc.hdOwnSeq.value +
+'&card=' + doc.hdCard.value + '&roll=' + roll +
+'&State=' + doc.hdMask.value + '&item=' + doc.hdItem.value +
+'&items=' + doc.hdItems.value + '&all=' + "" + "&ranks=" + ranks;  
+
+var windowHeight = customReportBuilderRows*25 + 200;
+
+var options = "location=no, scrollbars=yes, menubar=yes, resizable=yes, width=500, height="+ windowHeight;
+
+window.open(url, 'CustomReportBuilder', options);
+}
+
+//END Action Links ******************************************
+
+</script>
+<!-- record navigator: end -->
+
+</td>
+</tr>
+
+</tbody></table>
+
+</div></div>
+</div>
+
+
+
+
+
+
+<input name="hdIDX" type="hidden" id="hdIDX">
+<input name="hdPin" type="hidden" id="hdPin" value="3012380016">
+<input name="hdItemKey" type="hidden" id="hdItemKey">
+<input name="hdTaxYear" type="hidden" id="hdTaxYear" value="2020">
+<input name="hdJur" type="hidden" id="hdJur" value="65">
+<input name="hdOwnSeq" type="hidden" id="hdOwnSeq" value="0">
+<input name="hdMode" type="hidden" id="hdMode" value="SOA_DOCS">
+<input name="hdCard" type="hidden" id="hdCard" value="1">
+<input name="hdRoll" type="hidden" id="hdRoll">
+<input name="hdItem" type="hidden" id="hdItem" value="1">
+<input name="hdItems" type="hidden" id="hdItems" value="-1">
+<input name="hdMask" type="hidden" id="hdMask" value="1">
+<input name="hdsIndex" type="hidden" id="hdsIndex" value="-1">
+<input type="hidden" id="hdSkip" name="hdSkip">
+
+
+
+
+</form>
+
+
+<script>
+//    alert("onload");
+//window.attachEvent("onload", WindowOnLoad);
+//window.addEventListener("onload", WindowOnLoad);
+window.onload=function(){
+
+var skip = document.frmMain.hdSkip;
+if (skip != null && skip.value == "1") {
+frmMain.submit();
+}
+
+//added for map
+//alert(bOnLoad);
+if (bOnLoad) body_onload();
+if (newPinFromMap) updateFrmPinParam();
+};
+
+</script>
+
+<script>
+
+var gPin = "3012380016";
+var thisURL = "https://a836-pts-access.nyc.gov/care/datalets/datalet.aspx?mode=soa_docs&sIndex=0&idx=1&LMparent=20";
+var sIndex	= "0";
+var sIdx	= "1";
+var ranks	= "Datalet";
+var DLG_EMAIL = "center:yes; dialogHeight:300px; dialogWidth:600px; help:no; resizable:no; status:no; title:no";
+var roll = "RP_NY";
+var newPinFromMap = false;
+
+function showReport(el)
+{
+var report = document.getElementById("Reports_currentrecs");
+var val = trim(report.value);
+if (val.length == 0)
+{
+alert("Please select report");
+return;
+}
+var url = "../Reports/ReportAV2.aspx?Pin=" + gPin + "&Report=" + val;
+window.open(url, 'w1', 'width=800, height=600');
+}
+
+function OpenIRIncident(id)
+{
+var url = '../Respond/IncidentDetail.aspx?id=' + id + '&mode=link';
+
+var s;
+s = "fullscreen=no, titlebar=no, location=no, menubar=no, toolbar=no, resizable=yes, scrollbars=yes, status=yes, titlebar=yes"; 
+return window.open(url, 'OpenIRIncident', s);
+}
+
+window.focus();
+
+</script>
+
+
+</div></section></div></div><footer><div id="footerarea"><div id="footercontent"><div id="dvFooter" style="clear:both; text-align:center;">
+
+
+<style type="text/css">
+.auto-style1 {
+font-family: Arial, Helvetica, sans-serif;
+}
+.auto-style2 {
+font-family: Arial, Helvetica, sans-serif;
+font-size: medium;
+}
+.auto-style3 {
+font-size: medium;
+}
+.auto-style5 {
+font-family: Arial, Helvetica, sans-serif;
+font-size: xx-small;
+text-align: left;
+margin-top: 0px;
+color:#ffffff;
+}
+.auto-style6 {
+text-align: left;
+}
+.auto-style8 {
+font-family: Arial, Helvetica, sans-serif;
+font-size: medium;
+text-align: left;
+}
+.auto-style9 {
+border-width: 0px;
+}
+</style>
+
+
+
+<table style="width: 1127px; height: 184px;" cellpadding="12" cellspacing="1" align="center">
+<tbody><tr>
+<td style="width: 1484px; " class="auto-style8">
+<span class="auto-style2">
+<a href="https://www1.nyc.gov/nyc-resources/agencies.page"><strong>
+Directory of City Agencies</strong></a></span><strong><br class="auto-style3">
+<br class="auto-style3"><span class="auto-style3">
+<a href="https://a858-nycnotify.nyc.gov/notifynyc/">Notify NYC</a></span><br class="auto-style2">
+</strong><br class="auto-style3"><span class="auto-style3">
+<strong>
+<a href="https://www1.nyc.gov/connect/mobile-applications.page">NYC 
+Mobile Apps</a></strong></span><br></td>
+<td style="width: 1121px; " class="auto-style6">
+<span class="auto-style14"><span class="auto-style2"><strong>
+<a href="https://www1.nyc.gov/home/contact-us.page">Contact NYC 
+Government</a><br><br><a href="https://a856-citystore.nyc.gov/">
+CityStore</a></strong></span></span><span class="auto-style12"><span class="auto-style2"><strong><br>
+<br><a href="https://www1.nyc.gov/nyc-resources/nyc-maps.page">Maps</a></strong></span></span><br></td>
+<td style="width: 560px; " class="auto-style8">
+<strong>
+<a href="https://a127-ess.nyc.gov/psp/prdess/?cmd=login&amp;languageCd=ENG&amp;">
+City Employees</a><br><br>
+<a href="https://www1.nyc.gov/connect/social-media.page">Stay 
+Connected</a><br><br>
+<a href="https://www1.nyc.gov/nyc-resources/resident-toolkit.page">
+Resident Toolkit</a></strong><br></td>
+<td style="width: 172px; " class="auto-style6">
+<span class="auto-style1"><span class="auto-style3">
+<img alt="NYC Logo" height="32" src="https://www1.nyc.gov/assets/home/images/global/nyc_white.png" width="93" style="float: left"><div class="auto-style6">
+</div>
+<br><br></span>
+<p class="auto-style5" style="height: 40px; width: 179px">City of New York. 2019<br>All Rights Reserved,<br>
+NYC is a trademark and service mark of the City of New York<br>
+<a href="https://www1.nyc.gov/home/privacy-policy.page">Privacy Policy.</a>&nbsp;&nbsp;
+<a href="https://www1.nyc.gov/home/terms-of-use.page">Terms of Use.</a>&nbsp;&nbsp;&nbsp;&nbsp;
+<a href="https://www1.nyc.gov/site/mopd/index.page">
+<img class="auto-style9" height="25" src="https://www1.nyc.gov/assets/home/images/global/accessibility_icon.svg" width="20"></a></p>
+</span></td>
+
+<td style="width: 368px; ">
+
+<form class="form-search" method="get" action="https://www1.nyc.gov/home/search/index.page" style="height: 60px; width: 122px">
+<input placeholder="Search" class="input-search placeholder" name="search-terms" type="text"><button class="ico-search">Search</button>
+
+<br><br>
+
+</form>
+</td>
+
+</tr>
+</tbody></table>
+
+
+</div>
+<script>
+var tmpLate = "../images/cur_template";
+function getTmpLate(par)
+{
+return tmpLate + par;
+}
+</script>
+
+
+</div></div></footer><script language="JavaScript">window.setTimeout("window.location.replace('../forms/htmlframe.aspx?mode=content/home.htm')", 3590000);</script></body></html>

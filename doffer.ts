@@ -3,7 +3,7 @@ import puppeteer from 'puppeteer';
 
 import { FileSystemCache, Cache, asTextCache, asJSONCache } from './lib/cache';
 import { BBL } from './lib/bbl';
-import { searchForBBL, gotoSidebarLink, SidebarLinkName, parseNOPVLinks, NOPVLink } from './lib/dof';
+import { searchForBBL, gotoSidebarLink, SidebarLinkName, parseNOPVLinks, NOPVLink, SOALink, parseSOALinks } from './lib/dof';
 import { getPageHTML } from './lib/page-util';
 import { download } from './lib/download';
 import { getISODate } from './lib/util';
@@ -60,6 +60,11 @@ class PageGetter {
     });
   }
 
+  async cachedDownloadAndConvertPDFToText(bbl: BBL, url: string, cache: Cache, cacheSubkey: string): Promise<string> {
+    const pdfData = await this.cachedDownloadPDF(bbl, url, cache, cacheSubkey);
+    return this.cachedConvertPDFToText(bbl, pdfData, cache, cacheSubkey);
+  }
+
   async shutdown() {
     this.bbl = null;
     if (this.page) {
@@ -103,11 +108,33 @@ async function getNOPVInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Prom
   // Gather data.
   for (let link of links) {
     const date = getISODate(link.date);
-    const subkey = `nopv-${date}`;
-    const pdfData = await pageGetter.cachedDownloadPDF(bbl, link.url, cache, subkey);
-    const text = await pageGetter.cachedConvertPDFToText(bbl, pdfData, cache, subkey);
+    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, cache, `nopv-${date}`);
     const noi = extractNetOperatingIncome(text);
     results.push({...link, noi});
+  }
+
+  return results;
+}
+
+type SOAInfo = SOALink & {
+  // TODO: Add data points here.
+};
+
+async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Promise<SOAInfo[]> {
+  const results: SOAInfo[] = [];
+
+  const page = SidebarLinkName.propertyTaxBills;
+  const html = await pageGetter.cachedGetPageHTML(bbl, page, cache, 'soa');
+  const links = parseSOALinks(html);
+
+  for (let link of links) {
+    if (link.quarter !== 1) continue;
+
+    const date = getISODate(link.date);
+    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, cache, `soa-${date}`);
+
+    // TODO: Extract some data points from the SOA.
+    results.push({...link});
   }
 
   return results;
@@ -119,6 +146,7 @@ async function mainForBBL(bbl: BBL, cache: Cache) {
 
   try {
     const nopvInfo = await getNOPVInfo(pageGetter, bbl, cache);
+    const soaInfo = await getSOAInfo(pageGetter, bbl, cache);
 
     for (let {period, noi} of nopvInfo) {
       if (noi) {
