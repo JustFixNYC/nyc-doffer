@@ -1,7 +1,7 @@
 import path from 'path';
 import puppeteer from 'puppeteer';
 
-import { FileSystemCache, Cache } from './lib/cache';
+import { FileSystemCache, Cache, asTextCache, asJSONCache } from './lib/cache';
 import { BBL } from './lib/bbl';
 import { searchForBBL, gotoSidebarLink, SidebarLinkName, parseNOPVLinks, NOPVLink } from './lib/dof';
 import { getPageHTML } from './lib/page-util';
@@ -22,7 +22,7 @@ class PageGetter {
   private page: puppeteer.Page|null = null;
   private bbl: BBL|null = null;
 
-  async getPage(bbl: BBL, linkName: SidebarLinkName): Promise<Buffer> {
+  async getPage(bbl: BBL, linkName: SidebarLinkName): Promise<string> {
     if (!this.browser) {
       this.browser = await puppeteer.launch();
     }
@@ -36,31 +36,28 @@ class PageGetter {
       }
     }
     await gotoSidebarLink(this.page, linkName);
-    return Buffer.from(await getPageHTML(this.page), CACHE_HTML_ENCODING);
+    return getPageHTML(this.page);
   }
 
-  async getCachedPageHTML(bbl: BBL, linkName: SidebarLinkName, cache: Cache, cacheSubkey: string): Promise<string> {
-    const buf = await cache.get(
+  async cachedGetPageHTML(bbl: BBL, linkName: SidebarLinkName, cache: Cache, cacheSubkey: string): Promise<string> {
+    return asTextCache(cache, CACHE_HTML_ENCODING).get(
       `html/${bbl}_${cacheSubkey}.html`,
       () => this.getPage(bbl, linkName)
     );
-    return buf.toString(CACHE_HTML_ENCODING);
   }
 
-  async downloadPDFToCache(bbl: BBL, url: string, cache: Cache, cacheSubkey: string): Promise<Buffer> {
+  async cachedDownloadPDF(bbl: BBL, url: string, cache: Cache, cacheSubkey: string): Promise<Buffer> {
     return cache.get(`pdf/${bbl}_${cacheSubkey}.pdf`, () => {
       console.log(`Downloading ${url}...`);
       return download(url);
     });
   }
 
-  async convertAndCachePDFToText(bbl: BBL, pdfData: Buffer, cache: Cache, cacheSubkey: string): Promise<string> {
-    const convert = async () => {
+  async cachedConvertPDFToText(bbl: BBL, pdfData: Buffer, cache: Cache, cacheSubkey: string): Promise<string> {
+    return asTextCache(cache, CACHE_TEXT_ENCODING).get(`txt/${bbl}_${cacheSubkey}.txt`, () => {
       console.log(`Converting PDF to text...`);
-      return Buffer.from(await convertPDFToText(pdfData), CACHE_TEXT_ENCODING);
-    };
-    const buf = await cache.get(`txt/${bbl}_${cacheSubkey}.txt`, convert);
-    return buf.toString(CACHE_TEXT_ENCODING);
+      return convertPDFToText(pdfData);
+    });
   }
 
   async shutdown() {
@@ -80,15 +77,13 @@ class PageGetter {
  * Attempt to geolocate the given search text and return the result, using
  * a cached value if possible.
  */
-async function geoSearchAndCache(text: string, cache: Cache): Promise<GeoSearchProperties|null> {
+async function cachedGeoSearch(text: string, cache: Cache): Promise<GeoSearchProperties|null> {
   const simpleText = text.replace(/[^a-z0-9\- ]/g, '');
   const cacheKey = `geosearch/${simpleText.replace(/ /g, '_')}.json`;
-  const result = await cache.get(cacheKey, async () => {
+  return asJSONCache<GeoSearchProperties|null>(cache).get(cacheKey, () => {
     console.log(`Geocoding "${simpleText}"...`);
-    const info = await getFirstGeoSearchResult(simpleText);
-    return Buffer.from(JSON.stringify(info, null, 2), 'utf-8');
+    return getFirstGeoSearchResult(simpleText);
   });
-  return JSON.parse(result.toString('utf-8'));
 }
 
 /** Information about a BBL's Notice of Property Value (NOPV) for a particular period. */
@@ -102,20 +97,22 @@ async function getNOPVInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Prom
   const results: NOPVInfo[] = [];
 
   const page = SidebarLinkName.noticesOfPropertyValue;
-  const html = await pageGetter.getCachedPageHTML(bbl, page, cache, 'nopv');
+  const html = await pageGetter.cachedGetPageHTML(bbl, page, cache, 'nopv');
   const links = parseNOPVLinks(html);
 
+  // Gather data.
   for (let link of links) {
     const date = getISODate(link.date);
     const subkey = `nopv-${date}`;
-    const pdfData = await pageGetter.downloadPDFToCache(bbl, link.url, cache, subkey);
-    const text = await pageGetter.convertAndCachePDFToText(bbl, pdfData, cache, subkey);
+    const pdfData = await pageGetter.cachedDownloadPDF(bbl, link.url, cache, subkey);
+    const text = await pageGetter.cachedConvertPDFToText(bbl, pdfData, cache, subkey);
     const noi = extractNetOperatingIncome(text);
     results.push({...link, noi});
   }
 
   return results;
 }
+
 
 /** Performs the main CLI program on the given BBL. */
 async function mainForBBL(bbl: BBL, cache: Cache) {
@@ -144,7 +141,7 @@ async function main(argv: string[]) {
   }
 
   const cache = new FileSystemCache(CACHE_DIR);
-  const geo = await geoSearchAndCache(searchText, cache);
+  const geo = await cachedGeoSearch(searchText, cache);
   if (!geo) {
     throw new GracefulError("The search text is invalid.");
   }
