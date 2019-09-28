@@ -1,4 +1,4 @@
-const REGEX = /TODO PUT SOMETHING HERE/i;
+const REGEX = /(?:Housing-Rent Stabilization|Rent Stabilization Fee- Chg)\s+(\d+)/i;
 
 export function extractRentStabilizedUnits(text: string): number|null {
   const match = text.match(REGEX);
