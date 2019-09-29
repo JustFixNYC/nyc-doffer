@@ -50,18 +50,18 @@ class PageGetter {
     );
   }
 
-  async cachedDownloadPDF(bbl: BBL, url: string, cache: Cache, cacheSubkey: string): Promise<Buffer> {
+  async cachedDownloadPDF(bbl: BBL, url: string, name: string, cache: Cache, cacheSubkey: string): Promise<Buffer> {
     return cache.get(`pdf/${bbl}_${cacheSubkey}.pdf`, () => {
-      console.log(`Downloading ${url}...`);
+      console.log(`Downloading ${name} PDF...`);
       return download(url);
     });
   }
 
-  async cachedDownloadAndConvertPDFToText(bbl: BBL, url: string, cache: Cache, cacheSubkey: string, extraFlags?: PDFToTextFlags[]): Promise<string> {
+  async cachedDownloadAndConvertPDFToText(bbl: BBL, url: string, name: string, cache: Cache, cacheSubkey: string, extraFlags?: PDFToTextFlags[]): Promise<string> {
     const pdfToTextKey = `pdftotext-${EXPECTED_PDFTOTEXT_VERSION}` + (extraFlags || []).join('');
     return asTextCache(cache, CACHE_TEXT_ENCODING).get(`txt/${bbl}_${cacheSubkey}_${pdfToTextKey}.txt`, async () => {
-      const pdfData = await this.cachedDownloadPDF(bbl, url, cache, cacheSubkey);
-      console.log(`Converting PDF to text...`);
+      const pdfData = await this.cachedDownloadPDF(bbl, url, name, cache, cacheSubkey);
+      console.log(`Converting ${name} PDF to text...`);
       return convertPDFToText(pdfData, extraFlags);
     });
   }
@@ -106,10 +106,10 @@ async function getNOPVInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Prom
   const html = await pageGetter.cachedGetPageHTML(bbl, page, cache, 'nopv');
   const links = parseNOPVLinks(html);
 
-  // Gather data.
   for (let link of links) {
     const date = getISODate(link.date);
-    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, cache, `nopv-${date}`, ['-layout']);
+    const name = `${date} NOPV for BBL ${bbl}`;
+    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, name, cache, `nopv-${date}`, ['-layout']);
     const noi = extractNetOperatingIncome(text);
     results.push({...link, noi});
   }
@@ -132,7 +132,8 @@ async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Promi
     if (link.quarter !== 1) continue;
 
     const date = getISODate(link.date);
-    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, cache, `soa-${date}`, ['-table']);
+    const name = `${date} Q1 SOA for BBL ${bbl}`;
+    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, name, cache, `soa-${date}`, ['-table']);
     const rentStabilizedUnits = extractRentStabilizedUnits(text);
 
     results.push({...link, rentStabilizedUnits});
