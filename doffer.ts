@@ -13,6 +13,7 @@ import { extractNetOperatingIncome } from './lib/extract-noi';
 import { getFirstGeoSearchResult, GeoSearchProperties } from './lib/geosearch';
 import { extractRentStabilizedUnits } from './lib/extract-rentstab-units';
 import { launchBrowser } from './lib/browser';
+import { Log, defaultLog } from './lib/log';
 
 dotenv.config();
 
@@ -27,6 +28,9 @@ class PageGetter {
   private page: puppeteer.Page|null = null;
   private bbl: BBL|null = null;
 
+  constructor(readonly log: Log = defaultLog) {
+  }
+
   async getPage(bbl: BBL, linkName: SidebarLinkName): Promise<string> {
     if (!this.browser) {
       this.browser = await launchBrowser();
@@ -36,7 +40,7 @@ class PageGetter {
     }
     if (!this.bbl || this.bbl.toString() !== bbl.toString()) {
       this.bbl = bbl;
-      if (!await searchForBBL(this.page, this.bbl)) {
+      if (!await searchForBBL(this.page, this.bbl, this.log)) {
         throw new Error(`DOF property page for BBL ${this.bbl} does not exist`);
       }
     }
@@ -53,7 +57,7 @@ class PageGetter {
 
   async cachedDownloadPDF(bbl: BBL, url: string, name: string, cache: Cache, cacheSubkey: string): Promise<Buffer> {
     return cache.get(`pdf/${bbl}_${cacheSubkey}.pdf`, () => {
-      console.log(`Downloading ${name} PDF...`);
+      this.log(`Downloading ${name} PDF...`);
       return download(url);
     });
   }
@@ -62,7 +66,7 @@ class PageGetter {
     const pdfToTextKey = `pdftotext-${EXPECTED_PDFTOTEXT_VERSION}` + (extraFlags || []).join('');
     return asTextCache(cache, CACHE_TEXT_ENCODING).get(`txt/${bbl}_${cacheSubkey}_${pdfToTextKey}.txt`, async () => {
       const pdfData = await this.cachedDownloadPDF(bbl, url, name, cache, cacheSubkey);
-      console.log(`Converting ${name} PDF to text...`);
+      this.log(`Converting ${name} PDF to text...`);
       return convertPDFToText(pdfData, extraFlags);
     });
   }
@@ -84,11 +88,11 @@ class PageGetter {
  * Attempt to geolocate the given search text and return the result, using
  * a cached value if possible.
  */
-async function cachedGeoSearch(text: string, cache: Cache): Promise<GeoSearchProperties|null> {
+async function cachedGeoSearch(text: string, cache: Cache, log: Log = defaultLog): Promise<GeoSearchProperties|null> {
   const simpleText = text.replace(/[^a-z0-9\- ]/g, '');
   const cacheKey = `geosearch/${simpleText.replace(/ /g, '_')}.json`;
   return asJSONCache<GeoSearchProperties|null>(cache).get(cacheKey, () => {
-    console.log(`Geocoding "${simpleText}"...`);
+    log(`Geocoding "${simpleText}"...`);
     return getFirstGeoSearchResult(simpleText);
   });
 }
@@ -144,8 +148,8 @@ async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Promi
 }
 
 /** Performs the main CLI program on the given BBL. */
-async function mainForBBL(bbl: BBL, cache: Cache) {
-  const pageGetter = new PageGetter();
+async function mainForBBL(bbl: BBL, cache: Cache, log: Log = defaultLog) {
+  const pageGetter = new PageGetter(log);
 
   try {
     const nopvInfo = await getNOPVInfo(pageGetter, bbl, cache);
@@ -153,24 +157,24 @@ async function mainForBBL(bbl: BBL, cache: Cache) {
 
     for (let {period, noi} of nopvInfo) {
       if (noi) {
-        console.log(`The net operating income for ${period} is ${noi}.`);
+        log(`The net operating income for ${period} is ${noi}.`);
       }
     }
 
     for (let {period, rentStabilizedUnits} of soaInfo) {
       if (rentStabilizedUnits) {
-        console.log(`During ${period}, the property had ${rentStabilizedUnits} rent stabilized units.`);
+        log(`During ${period}, the property had ${rentStabilizedUnits} rent stabilized units.`);
       }
     }
 
-    console.log("Done.");
+    log("Done.");
   } finally {
     await pageGetter.shutdown();
   }
 }
 
 /** The main CLI program. */
-async function main(argv: string[]) {
+async function main(argv: string[], log: Log = defaultLog) {
   const searchText = argv[2];
 
   if (!searchText) {
@@ -178,14 +182,14 @@ async function main(argv: string[]) {
   }
 
   const cache = new FileSystemCache(CACHE_DIR);
-  const geo = await cachedGeoSearch(searchText, cache);
+  const geo = await cachedGeoSearch(searchText, cache, log);
   if (!geo) {
     throw new GracefulError("The search text is invalid.");
   }
   const bbl = BBL.from(geo.pad_bbl);
-  console.log(`Searching NYC DOF website for BBL ${bbl} (${geo.name}, ${geo.borough}).`);
+  log(`Searching NYC DOF website for BBL ${bbl} (${geo.name}, ${geo.borough}).`);
 
-  return mainForBBL(bbl, cache);
+  return mainForBBL(bbl, cache, log);
 }
 
 /** Error subclass that represents a graceful failure of the CLI. */

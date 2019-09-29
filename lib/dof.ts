@@ -4,6 +4,7 @@ import cheerio from 'cheerio';
 import { BBL } from './bbl';
 import { clickAndWaitForNavigation } from './page-util';
 import { parseDate } from './util';
+import { Log, defaultLog } from './log';
 
 const BBL_SEARCH_URL = 'https://a836-pts-access.nyc.gov/care/search/commonsearch.aspx?mode=persprop';
 
@@ -41,14 +42,14 @@ export enum SidebarLinkName {
  * 
  * Returns false if no tax bills exist for the BBL.
  */
-export async function searchForBBL(page: puppeteer.Page, bbl: BBL): Promise<boolean> {
-  console.log('Visiting DOF site...');
+export async function searchForBBL(page: puppeteer.Page, bbl: BBL, log: Log = defaultLog): Promise<boolean> {
+  log('Visiting DOF site...');
   await page.goto(BBL_SEARCH_URL);
   if (await page.$(AGREE_BTN)) {
-    console.log('Agreeing to disclaimer...');
+    log('Agreeing to disclaimer...');
     await clickAndWaitForNavigation(page, AGREE_BTN);
   }
-  console.log('Filling out BBL search form...');
+  log('Filling out BBL search form...');
   await page.select(BOROUGH_INPUT, bbl.borough.toString());
   await page.type(BLOCK_INPUT, bbl.block.toString());
   await page.type(LOT_INPUT, bbl.lot.toString());
