@@ -2,10 +2,11 @@ import puppeteer from 'puppeteer';
 
 import { BBL, Borough } from "./lib/bbl";
 import { searchForBBL, gotoSidebarLink, SidebarLinkName } from './lib/dof';
+import { launchBrowser } from './lib/browser';
 
 async function main(bbls: BBL[]) {
   console.log('Launching browser...');
-  const browser = await puppeteer.launch();
+  const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
     for (let i = 0; i < bbls.length; i++) {

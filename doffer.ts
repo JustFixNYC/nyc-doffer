@@ -12,6 +12,7 @@ import { convertPDFToText, PDFToTextFlags, EXPECTED_PDFTOTEXT_VERSION } from './
 import { extractNetOperatingIncome } from './lib/extract-noi';
 import { getFirstGeoSearchResult, GeoSearchProperties } from './lib/geosearch';
 import { extractRentStabilizedUnits } from './lib/extract-rentstab-units';
+import { launchBrowser } from './lib/browser';
 
 dotenv.config();
 
@@ -28,7 +29,7 @@ class PageGetter {
 
   async getPage(bbl: BBL, linkName: SidebarLinkName): Promise<string> {
     if (!this.browser) {
-      this.browser = await puppeteer.launch();
+      this.browser = await launchBrowser();
     }
     if (!this.page) {
       this.page = await this.browser.newPage();
