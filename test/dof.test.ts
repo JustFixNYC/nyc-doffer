@@ -3,6 +3,9 @@ import fs from 'fs';
 import { expect } from 'chai';
 
 import { parseNOPVLinks, parseSOALinks } from '../lib/dof';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 function getHTML(filename: string): string {
   return fs.readFileSync(path.join(__dirname, 'html', filename), 'utf-8');

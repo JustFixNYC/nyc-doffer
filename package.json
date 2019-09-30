@@ -4,11 +4,13 @@
   "description": "Experiments with scraping the NYC DOF website.",
   "main": "index.js",
   "license": "MIT",
+  "type": "module",
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
     "test": "mocha",
-    "test:watch": "mocha --watch"
+    "test:watch": "mocha --watch",
+    "doffer": "node --experimental-modules --es-module-specifier-resolution=node doffer.js"
   },
   "devDependencies": {
     "@types/chai": "^4.2.3",
