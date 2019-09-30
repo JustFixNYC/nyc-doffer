@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { expect } from 'chai';
 import { FileSystemCache, CacheGetter } from '../lib/cache';
 
 // https://gist.github.com/tkihira/2367067
@@ -31,13 +32,13 @@ describe('FileSystemCache', () => {
       const cache = new FileSystemCache(tempDir);
 
       const value = await cache.get('foo/bar/123', async (key: string) => {
-        expect(key).toEqual('foo/bar/123');
+        expect(key).to.equal('foo/bar/123');
         return Buffer.from('boop', 'utf-8');
       });
-      expect(value.toString()).toEqual('boop');
+      expect(value.toString()).to.equal('boop');
 
       const precachedValue = await cache.get('foo/bar/123', neverCall);
-      expect(precachedValue.toString()).toEqual('boop');
+      expect(precachedValue.toString()).to.equal('boop');
     } finally {
       recursiveRmdirSync(tempDir);
     }

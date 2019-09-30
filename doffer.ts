@@ -14,11 +14,10 @@ import { getFirstGeoSearchResult, GeoSearchProperties } from './lib/geosearch';
 import { extractRentStabilizedUnits } from './lib/extract-rentstab-units';
 import { launchBrowser } from './lib/browser';
 import { Log, defaultLog } from './lib/log';
-import { myDirname, amIBeingRunAsAScript } from './lib/esm-util';
 
 dotenv.config();
 
-const CACHE_DIR = path.join(myDirname(import.meta), '.dof-cache');
+const CACHE_DIR = path.join(__dirname, '.dof-cache');
 
 const CACHE_HTML_ENCODING = 'utf-8';
 
@@ -197,7 +196,7 @@ async function main(argv: string[], log: Log = defaultLog) {
 class GracefulError extends Error {
 }
 
-if (amIBeingRunAsAScript(import.meta)) {
+if (module.parent === null) {
   main(process.argv).catch(e => {
     if (e instanceof GracefulError) {
       e.message && console.log(e.message);
