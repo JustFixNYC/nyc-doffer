@@ -1,4 +1,3 @@
-import { expect } from 'chai';
 import { extractNetOperatingIncome } from "../lib/extract-noi";
 
 describe('extractNetOperatingIncome()', () => {
@@ -13,7 +12,7 @@ describe('extractNetOperatingIncome()', () => {
 
   textAndNOIs.forEach(([text, noi]) => {
     it(`should return ${JSON.stringify(noi)} for ${JSON.stringify(text)}`, () => {
-      expect(extractNetOperatingIncome(text)).to.eq(noi);
+      expect(extractNetOperatingIncome(text)).toEqual(noi);
     });
   });
 });

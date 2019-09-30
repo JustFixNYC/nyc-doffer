@@ -1,6 +1,5 @@
 import path from 'path';
 import fs from 'fs';
-import { expect } from 'chai';
 
 import { parseNOPVLinks, parseSOALinks } from '../lib/dof';
 import { fileURLToPath } from 'url';
@@ -14,7 +13,7 @@ function getHTML(filename: string): string {
 function ensureEqualJSON(object: any, filename: string) {
   const actual = JSON.parse(JSON.stringify(object));
   const expected = JSON.parse(fs.readFileSync(path.join(__dirname, 'json', filename), 'utf-8'));
-  expect(actual).to.deep.equal(expected);
+  expect(actual).toEqual(expected);
 }
 
 describe("parseNOPVLinks()", () => {
