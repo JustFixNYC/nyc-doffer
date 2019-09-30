@@ -15,6 +15,8 @@ const server = express();
 
 server.use(express.static(path.join(__dirname, 'static')));
 
+server.use('/vendor/preact', express.static(path.join(__dirname, 'node_modules', 'preact', 'dist')));
+
 server.listen(PORT, () => {
   console.log(`Listening on port ${PORT}.`);
 });
