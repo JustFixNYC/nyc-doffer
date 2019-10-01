@@ -69,3 +69,5 @@ RUN yarn build
 # We're only visiting the DOF site, which we trust, so we'll just
 # disable the Chromium sandbox.
 ENV DISABLE_CHROMIUM_SANDBOX=1
+
+CMD ["node", "webapp.js"]
