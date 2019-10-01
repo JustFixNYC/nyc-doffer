@@ -173,14 +173,7 @@ async function mainForBBL(bbl: BBL, cache: Cache, log: Log = defaultLog) {
   }
 }
 
-/** The main CLI program. */
-async function main(argv: string[], log: Log = defaultLog) {
-  const searchText = argv[2];
-
-  if (!searchText) {
-    throw new GracefulError(`Usage: doffer.js <search text>`);
-  }
-
+export async function mainWithSearchText(searchText: string, log: Log = defaultLog) {
   const cache = new FileSystemCache(CACHE_DIR);
   const geo = await cachedGeoSearch(searchText, cache, log);
   if (!geo) {
@@ -192,8 +185,19 @@ async function main(argv: string[], log: Log = defaultLog) {
   return mainForBBL(bbl, cache, log);
 }
 
+/** The main CLI program. */
+async function main(argv: string[], log: Log = defaultLog) {
+  const searchText = argv[2];
+
+  if (!searchText) {
+    throw new GracefulError(`Usage: doffer.js <search text>`);
+  }
+
+  return mainWithSearchText(searchText, log);
+}
+
 /** Error subclass that represents a graceful failure of the CLI. */
-class GracefulError extends Error {
+export class GracefulError extends Error {
 }
 
 if (module.parent === null) {
