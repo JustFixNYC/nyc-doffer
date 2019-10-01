@@ -89,7 +89,7 @@ class PageGetter {
  * a cached value if possible.
  */
 async function cachedGeoSearch(text: string, cache: Cache, log: Log = defaultLog): Promise<GeoSearchProperties|null> {
-  const simpleText = text.replace(/[^a-z0-9\- ]/g, '');
+  const simpleText = text.toLowerCase().replace(/[^a-z0-9\- ]/g, '');
   const cacheKey = `geosearch/${simpleText.replace(/ /g, '_')}.json`;
   return asJSONCache<GeoSearchProperties|null>(cache).get(cacheKey, () => {
     log(`Geocoding "${simpleText}"...`);

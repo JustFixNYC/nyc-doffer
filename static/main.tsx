@@ -1,22 +1,34 @@
 import { decodeMessageFromServer, sendMessageToServer, getInputValue } from "./app-util.js";
+import { GeoSearchRequester } from "./geo-autocomplete.js";
+import { GeoSearchResults } from "../lib/geosearch.js";
 
 type AppProps = {
 };
 
 type AppState = {
   address: string,
-  logMessages: string[]
+  logMessages: string[],
+  addressList: string[],
 };
 
 class App extends Component<AppProps, AppState> {
   ws: WebSocket|null = null;
+  requester: GeoSearchRequester;
 
   constructor(props: AppProps) {
     super(props);
     this.state = {
       address: '',
-      logMessages: ['Connecting to server...']
+      logMessages: ['Connecting to server...'],
+      addressList: [],
     };
+    this.requester = new GeoSearchRequester({
+      createAbortController: () => new AbortController(),
+      fetch,
+      throttleMs: 250,
+      onError: this.handleRequesterError.bind(this),
+      onResults: this.handleRequesterResults.bind(this)
+    });
   }
 
   componentDidMount() {
@@ -60,6 +72,10 @@ class App extends Component<AppProps, AppState> {
     this.ws = ws;  
   }
 
+  componentWillUnmount() {
+    this.requester.shutdown();
+  }
+
   addLogMessage(message: string) {
     this.setState({'logMessages': [...this.state.logMessages, message]});
   }
@@ -77,13 +93,37 @@ class App extends Component<AppProps, AppState> {
     }
   }
 
+  handleInput(e: Event) {
+    const address = getInputValue(e);
+    this.requester.changeSearchRequest(address);
+    this.setState({address});
+  }
+
+  handleRequesterError(e: Error) {
+    console.error(e);
+    this.setState({addressList: []});
+  }
+
+  handleRequesterResults(results: GeoSearchResults) {
+    const addressList = results.features.map(feature => {
+      const {name, borough} = feature.properties;
+      return `${name}, ${borough}`;
+    });
+    this.setState({addressList});
+  }
+
   render() {
     return (
       <div>
         <h1>nyc-doffer</h1>
         <form onSubmit={this.handleSubmit.bind(this)}>
           <label for="address">Address</label>
-          <input type="text" id="address" name="address" onInput={(e) => this.setState({'address': getInputValue(e)})} />
+          <input type="text" id="address" name="address" list="address-list" onInput={this.handleInput.bind(this)} />
+          <datalist id="address-list">
+            {this.state.addressList
+              .filter(address => address !== this.state.address)
+              .map((address, i) => <option key={i} value={address} />)}
+          </datalist>
           <input type="submit" value="Submit" />
         </form>
         <div class="messages">

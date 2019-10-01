@@ -1,11 +1,5 @@
 import { download } from "./download";
-
-/**
- * For documentation about this endpoint, see:
- *
- * https://geosearch.planninglabs.nyc/docs/#autocomplete
- */
-const GEO_AUTOCOMPLETE_URL = 'https://geosearch.planninglabs.nyc/v1/autocomplete';
+import { GEO_AUTOCOMPLETE_URL } from "../static/geo-autocomplete";
 
 /**
  * The keys here were obtained experimentally, I'm not actually sure
