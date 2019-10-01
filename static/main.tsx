@@ -9,6 +9,7 @@ type AppProps = {
 
 type AppState = {
   address: string,
+  submittedAddress: string,
   logMessages: string[],
   addressList: string[],
 };
@@ -22,6 +23,7 @@ class App extends Component<AppProps, AppState> {
     super(props);
     this.state = {
       address: '',
+      submittedAddress: '',
       logMessages: ['Connecting to server...'],
       addressList: [],
     };
@@ -54,7 +56,10 @@ class App extends Component<AppProps, AppState> {
     const websocketURL = `${protocol}//${location.host}`;
     const ws = new WebSocket(websocketURL);
     ws.onopen = () => {
-      this.addLogMessage('Connection with server established. Please submit a request.');
+      this.addLogMessage('Connection with server established.');
+      if (this.state.submittedAddress) {
+        sendMessageToServer(ws, {event: 'startJob', address: this.state.submittedAddress});        
+      }
     };
     ws.onerror = (error) => {
       console.log("Connection error!", error);
@@ -81,6 +86,7 @@ class App extends Component<AppProps, AppState> {
 
         case 'jobError':
         this.addLogMessage(message.message || 'Alas, an error occurred.');
+        this.setState({submittedAddress: ''});
         break;
 
         case 'jobInProgress':
@@ -89,6 +95,7 @@ class App extends Component<AppProps, AppState> {
 
         case 'jobFinished':
         this.addLogMessage('The server has finished processing your request.');
+        this.setState({submittedAddress: ''});
         break;
       }
     }
@@ -107,6 +114,7 @@ class App extends Component<AppProps, AppState> {
 
     if (this.ws && this.ws.readyState === this.ws.OPEN) {
       const { address } = this.state;
+      this.setState({submittedAddress: address, logMessages: []});
       if (address) {
         sendMessageToServer(this.ws, {event: 'startJob', address});
       }
@@ -135,18 +143,19 @@ class App extends Component<AppProps, AppState> {
   }
 
   render() {
+    const isFormDisabled = !!this.state.submittedAddress;
     return (
       <div>
         <h1>nyc-doffer</h1>
         <form onSubmit={this.handleSubmit.bind(this)}>
           <label for="address">Address</label>
-          <input type="text" id="address" name="address" list="address-list" onInput={this.handleInput.bind(this)} />
+          <input type="text" id="address" name="address" list="address-list" onInput={this.handleInput.bind(this)} disabled={isFormDisabled} />
           <datalist id="address-list">
             {this.state.addressList
               .filter(address => address !== this.state.address)
               .map((address, i) => <option key={i} value={address} />)}
           </datalist>
-          <input type="submit" value="Submit" />
+          <input type="submit" value="Submit" disabled={isFormDisabled} />
         </form>
         <div class="messages">
           {this.state.logMessages.map((message, i) => <div key={i}>{message}</div>)}

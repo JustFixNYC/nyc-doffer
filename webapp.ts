@@ -41,6 +41,7 @@ class Job {
   async start() {
     try {
       await mainWithSearchText(this.address, this.handleLogMessage.bind(this));
+      this.broadcastMessage({event: 'jobFinished'});
     } catch (e) {
       let message = null;
 
