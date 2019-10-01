@@ -2,6 +2,8 @@ import { decodeMessageFromServer, sendMessageToServer, getInputValue } from "./a
 import { GeoSearchRequester } from "./geo-autocomplete.js";
 import { GeoSearchResults } from "../lib/geosearch.js";
 
+const RECONNECT_MS = 1000;
+
 type AppProps = {
 };
 
@@ -13,6 +15,7 @@ type AppState = {
 
 class App extends Component<AppProps, AppState> {
   ws: WebSocket|null = null;
+  reconnectTimeout?: number;
   requester: GeoSearchRequester;
 
   constructor(props: AppProps) {
@@ -32,6 +35,21 @@ class App extends Component<AppProps, AppState> {
   }
 
   componentDidMount() {
+    this.connectToServer();
+  }
+
+  componentWillUnmount() {
+    if (this.reconnectTimeout !== undefined) {
+      window.clearTimeout(this.reconnectTimeout);
+    }
+    this.requester.shutdown();
+  }
+
+  addLogMessage(message: string) {
+    this.setState({'logMessages': [...this.state.logMessages, message]});
+  }
+
+  connectToServer() {
     const protocol = location.protocol === "http:" ? "ws:" : "wss:";
     const websocketURL = `${protocol}//${location.host}`;
     const ws = new WebSocket(websocketURL);
@@ -40,44 +58,48 @@ class App extends Component<AppProps, AppState> {
     };
     ws.onerror = (error) => {
       console.log("Connection error!", error);
-      this.addLogMessage('A connection error with the server occurred! Maybe reload the page?');
+      this.handleConnectionLost();
     };
-    ws.onmessage = (e) => {
-      const message = decodeMessageFromServer(e);
-      if (message) {
-        console.log("Connection message!", message.event);
-        switch (message.event) {
-          case 'jobAccepted':
-          this.setState({'logMessages': []});
-          break;
+    ws.onclose = this.handleConnectionLost.bind(this);
+    ws.onmessage = this.handleMessageFromServer.bind(this);
+    this.ws = ws;
+    this.reconnectTimeout = undefined;
+  }
 
-          case 'jobStatus':
-          this.addLogMessage(message.text);
-          break;
+  handleMessageFromServer(e: MessageEvent) { 
+    const message = decodeMessageFromServer(e);
+    if (message) {
+      console.log("Connection message!", message.event);
+      switch (message.event) {
+        case 'jobAccepted':
+        this.setState({'logMessages': []});
+        break;
 
-          case 'jobError':
-          this.addLogMessage(message.message || 'Alas, an error occurred.');
-          break;
+        case 'jobStatus':
+        this.addLogMessage(message.text);
+        break;
 
-          case 'jobInProgress':
-          this.addLogMessage('The server is still processing your previous request!');
-          break;
+        case 'jobError':
+        this.addLogMessage(message.message || 'Alas, an error occurred.');
+        break;
 
-          case 'jobFinished':
-          this.addLogMessage('The server has finished processing your request.');
-          break;
-        }
+        case 'jobInProgress':
+        this.addLogMessage('The server is still processing your previous request!');
+        break;
+
+        case 'jobFinished':
+        this.addLogMessage('The server has finished processing your request.');
+        break;
       }
-    };
-    this.ws = ws;  
+    }
   }
 
-  componentWillUnmount() {
-    this.requester.shutdown();
-  }
-
-  addLogMessage(message: string) {
-    this.setState({'logMessages': [...this.state.logMessages, message]});
+  handleConnectionLost() {
+    if (this.ws && this.reconnectTimeout === undefined) {
+      this.ws = null;
+      this.addLogMessage('Unable to reach server. Attempting to reconnect...');
+      this.reconnectTimeout = window.setTimeout(this.connectToServer.bind(this), RECONNECT_MS);
+    }
   }
 
   handleSubmit(e: Event) {
