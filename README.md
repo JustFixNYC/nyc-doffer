@@ -22,8 +22,19 @@ run `yarn watch` in a separate terminal.
 You can run the tool by passing it an address to search for, e.g.:
 
 ```
-node doffer.js "654 park place, brooklyn"
+node -r esm doffer.js "654 park place, brooklyn"
 ```
+
+## Running the web server
+
+You can run a web server for development and testing purposes only
+(it isn't designed to scale beyond a single process):
+
+```
+node -r esm webserver.js
+```
+
+Then visit http://localhost:3000.
 
 ## Running tests
 
@@ -40,5 +51,5 @@ You can also run tests in watch mode. To do this, use `yarn test:watch`.
 To run tests against the DOF website to make sure scraping works, run:
 
 ```
-node test-dof-site.js
+node -r esm test-dof-site.js
 ```

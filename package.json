@@ -7,8 +7,8 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
-    "test": "mocha",
-    "test:watch": "mocha --watch"
+    "test": "mocha --recursive 'test/**/*.js' --require esm",
+    "test:watch": "mocha --watch --recursive 'test/**/*.js' --require esm"
   },
   "devDependencies": {
     "@types/chai": "^4.2.3",
@@ -25,6 +25,7 @@
     "@types/ws": "^6.0.3",
     "cheerio": "^1.0.0-rc.3",
     "dotenv": "^8.1.0",
+    "esm": "^3.2.25",
     "express": "^4.17.1",
     "preact": "^8.5.2",
     "puppeteer": "^1.20.0",

@@ -1,4 +1,4 @@
-/// <reference path="../node_modules/preact/dist/preact.d.ts" /> 
+import { decodeMessageFromServer, sendMessageToServer, getInputValue } from "./app-util.js";
 
 type AppProps = {
 };
@@ -8,7 +8,7 @@ type AppState = {
   logMessages: string[]
 };
 
-class App extends preact.Component<AppProps, AppState> {
+class App extends Component<AppProps, AppState> {
   ws: WebSocket|null = null;
 
   constructor(props: AppProps) {
@@ -94,34 +94,10 @@ class App extends preact.Component<AppProps, AppState> {
   }
 }
 
-function getInputValue(e: Event): string {
-  if (e.target && e.target instanceof HTMLInputElement) {
-    return e.target.value;
-  }
-  throw new Error('Event has no target, or target is not an <input> element!');
-}
-
-function sendMessageToServer(ws: WebSocket, message: DofferWebSocketClientMessage) {
-  ws.send(JSON.stringify(message));
-}
-
-function decodeMessageFromServer(event: MessageEvent): DofferWebSocketServerMessage|null {
-  if (typeof event.data !== 'string') {
-    console.log('Received non-string message from server.');
-    return null;
-  }
-  try {
-    return JSON.parse(event.data);
-  } catch (e) {
-    console.log('Received non-JSON message from server.');
-    return null;
-  }
-}
-
 window.addEventListener('DOMContentLoaded', () => {
   const el = document.getElementById('app');
 
   if (!el) throw new Error('App container not found');
 
-  preact.render(<App/>, el);
+  render(<App/>, el);
 });

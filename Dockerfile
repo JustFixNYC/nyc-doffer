@@ -70,4 +70,4 @@ RUN yarn build
 # disable the Chromium sandbox.
 ENV DISABLE_CHROMIUM_SANDBOX=1
 
-CMD ["node", "webapp.js"]
+CMD ["node", "-r", "esm", "webapp.js"]

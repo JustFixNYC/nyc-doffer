@@ -1,21 +1,5 @@
-declare type DofferWebSocketClientMessage = {
-  event: 'startJob',
-  address: string
-};
+/// <reference path="../node_modules/preact/dist/preact.d.ts" /> 
 
-declare type DofferWebSocketServerMessage = {
-  event: 'jobStatus',
-  text: string
-} | {
-  event: 'jobAccepted'
-} | {
-  event: 'jobFinished'
-} | {
-  event: 'jobInProgress'
-} | {
-  event: 'jobError',
-  message: string|null
-} | {
-  event: 'heartbeat',
-  time: number
-};
+declare let Component: typeof preact.Component;
+declare let h: typeof preact.h;
+declare let render: typeof preact.render;

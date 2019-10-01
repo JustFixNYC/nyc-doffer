@@ -4,6 +4,28 @@ import express from 'express';
 import ws from 'ws';
 import { mainWithSearchText, GracefulError } from './doffer';
 
+export type DofferWebSocketClientMessage = {
+  event: 'startJob',
+  address: string
+};
+
+export type DofferWebSocketServerMessage = {
+  event: 'jobStatus',
+  text: string
+} | {
+  event: 'jobAccepted'
+} | {
+  event: 'jobFinished'
+} | {
+  event: 'jobInProgress'
+} | {
+  event: 'jobError',
+  message: string|null
+} | {
+  event: 'heartbeat',
+  time: number
+};
+
 const PORT = process.env.PORT || '3000';
 
 const HEARTBEAT_MS = 15_000;
