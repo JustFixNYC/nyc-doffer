@@ -75,9 +75,13 @@ class Job {
     for (let message of this.logMessages) {
       sendMessageToClient(ws, {event: 'jobStatus', text: message});
     }
-    ws.on('close', () => {
-      this.webSockets.splice(this.webSockets.indexOf(ws), 1);
-    });
+  }
+
+  detach(ws: ws) {
+    const index = this.webSockets.indexOf(ws);
+    if (index !== -1) {
+      this.webSockets.splice(index, 1);
+    }
   }
 }
 
@@ -139,7 +143,12 @@ wss.on('connection', ws => {
     sendMessageToClient(ws, {event: 'heartbeat', time: Date.now()});
   }, HEARTBEAT_MS);
 
-  ws.on('close', () => clearInterval(interval));
+  ws.on('close', () => {
+    clearInterval(interval);
+    for (let job of jobs.values()) {
+      job.detach(ws);
+    }
+  });
 });
 
 server.listen(PORT, () => {
