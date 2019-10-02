@@ -17,7 +17,7 @@ import { Log, defaultLog } from './lib/log';
 
 dotenv.config();
 
-const CACHE_DIR = path.join(__dirname, '.dof-cache');
+export const CACHE_DIR = path.join(__dirname, '.dof-cache');
 
 const CACHE_HTML_ENCODING = 'utf-8';
 
@@ -125,7 +125,7 @@ type SOAInfo = SOALink & {
   rentStabilizedUnits: number|null,
 };
 
-type PropertyInfo = {
+export type PropertyInfo = {
   nopv: NOPVInfo[],
   soa: SOAInfo[]
 };
@@ -163,7 +163,7 @@ async function getPropertyInfoForBBL(bbl: BBL, cache: Cache, log: Log = defaultL
   }
 }
 
-async function getPropertyInfoForAddress(address: string, cache: Cache, log: Log = defaultLog): Promise<PropertyInfo> {
+export async function getPropertyInfoForAddress(address: string, cache: Cache, log: Log = defaultLog): Promise<PropertyInfo> {
   const geo = await cachedGeoSearch(address, cache, log);
   if (!geo) {
     throw new GracefulError("The search text is invalid.");

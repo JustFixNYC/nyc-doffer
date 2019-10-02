@@ -2,7 +2,8 @@ import path from 'path';
 import http from 'http';
 import express from 'express';
 import ws from 'ws';
-import { mainWithSearchText, GracefulError } from './doffer';
+import { mainWithSearchText, GracefulError, CACHE_DIR, getPropertyInfoForAddress, PropertyInfo } from './doffer';
+import { FileSystemCache, Cache } from './lib/cache';
 
 export type DofferWebSocketClientMessage = {
   event: 'startJob',
@@ -15,7 +16,8 @@ export type DofferWebSocketServerMessage = {
 } | {
   event: 'jobAccepted'
 } | {
-  event: 'jobFinished'
+  event: 'jobFinished',
+  propertyInfo: PropertyInfo
 } | {
   event: 'jobInProgress'
 } | {
@@ -34,14 +36,14 @@ class Job {
   webSockets: ws[] = [];
   logMessages: string[] = [];
 
-  constructor(readonly address: string, readonly onFinished: () => void) {
+  constructor(readonly address: string, readonly cache: Cache, readonly onFinished: () => void) {
     this.start();
   }
 
   async start() {
     try {
-      await mainWithSearchText(this.address, this.handleLogMessage.bind(this));
-      this.broadcastMessage({event: 'jobFinished'});
+      const propertyInfo = await getPropertyInfoForAddress(this.address, this.cache, this.handleLogMessage.bind(this));
+      this.broadcastMessage({event: 'jobFinished', propertyInfo});
     } catch (e) {
       let message = null;
 
@@ -94,6 +96,8 @@ const server = http.createServer(app);
 
 const wss = new ws.Server({ server });
 
+const cache = new FileSystemCache(CACHE_DIR);
+
 function sendMessageToClient(ws: ws, message: DofferWebSocketServerMessage) {
   ws.send(JSON.stringify(message));
 }
@@ -124,7 +128,7 @@ wss.on('connection', ws => {
         }
         currentJob = jobs.get(message.address);
         if (!currentJob) {
-          currentJob = new Job(message.address, () => {
+          currentJob = new Job(message.address, cache, () => {
             jobs.delete(message.address)
             currentJob = undefined;
           });

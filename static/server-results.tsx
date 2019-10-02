@@ -1,4 +1,5 @@
 import { decodeMessageFromServer, sendMessageToServer } from "./app-util.js";
+import { PropertyInfo } from "../doffer.js";
 
 const RECONNECT_MS = 1000;
 
@@ -9,6 +10,7 @@ export type ServerResultsProps = {
 
 type State = {
   logMessages: string[],
+  propertyInfo: PropertyInfo|null,
   isJobDone: boolean,
 };
 
@@ -20,6 +22,7 @@ export class ServerResults extends Component<ServerResultsProps, State> {
     super(props);
     this.state = {
       logMessages: ['Connecting to server...'],
+      propertyInfo: null,
       isJobDone: false
     };
   }
@@ -106,7 +109,7 @@ export class ServerResults extends Component<ServerResultsProps, State> {
 
         case 'jobFinished':
         this.addLogMessage('The server has finished processing your request.');
-        this.setState({isJobDone: true});
+        this.setState({isJobDone: true, propertyInfo: message.propertyInfo});
         break;
       }
     }
@@ -121,10 +124,56 @@ export class ServerResults extends Component<ServerResultsProps, State> {
   }
 
   render() {
+    const { propertyInfo } = this.state;
+
     return (
-      <div class="messages">
-        {this.state.logMessages.map((message, i) => <div key={i}>{message}</div>)}
+      <div>
+        <div class="messages">
+          {this.state.logMessages.map((message, i) => <div key={i}>{message}</div>)}
+        </div>
+        {propertyInfo && <PropertyInfo {...propertyInfo} />}
       </div>
     );
   }
+}
+
+function PDFLink(props: {url: string, date: string, title: string}) {
+  return <a href={props.url} target="_blank" rel="noopener noreferrer">{props.date} {props.title}</a>;
+}
+
+function PropertyInfo(props: PropertyInfo) {
+  return (
+    <div>
+      <h2>Property value details</h2>
+      <table>
+        <tr>
+          <th>Period</th>
+          <th>Statement (PDF)</th>
+          <th>Net operating income</th>
+        </tr>
+        {props.nopv.map(nopv => (
+          <tr>
+            <td>{nopv.period}</td>
+            <td><PDFLink title="NOPV" {...nopv} /></td>
+            <td>{nopv.noi}</td>
+          </tr>
+        ))}
+      </table>
+      <h2>Tax bill details</h2>
+      <table>
+        <tr>
+          <th>Period</th>
+          <th>Statement (PDF)</th>
+          <th>Rent stabilized units</th>
+        </tr>
+        {props.soa.map(soa => (
+          <tr>
+            <td>{soa.period}</td>
+            <td><PDFLink title="SOA" {...soa} /></td>
+            <td>{soa.rentStabilizedUnits}</td>
+          </tr>
+        ))}
+      </table>
+    </div>
+  );
 }
