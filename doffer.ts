@@ -112,9 +112,8 @@ async function getNOPVInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Prom
   const links = parseNOPVLinks(html);
 
   for (let link of links) {
-    const date = getISODate(link.date);
-    const name = `${date} NOPV for BBL ${bbl}`;
-    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, name, cache, `nopv-${date}`, ['-layout']);
+    const name = `${link.date} NOPV for BBL ${bbl}`;
+    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, name, cache, `nopv-${link.date}`, ['-layout']);
     const noi = extractNetOperatingIncome(text);
     results.push({...link, noi});
   }
@@ -136,9 +135,8 @@ async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Promi
   for (let link of links) {
     if (link.quarter !== 1) continue;
 
-    const date = getISODate(link.date);
-    const name = `${date} Q1 SOA for BBL ${bbl}`;
-    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, name, cache, `soa-${date}`, ['-table']);
+    const name = `${link.date} Q1 SOA for BBL ${bbl}`;
+    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, name, cache, `soa-${link.date}`, ['-table']);
     const rentStabilizedUnits = extractRentStabilizedUnits(text);
 
     results.push({...link, rentStabilizedUnits});
