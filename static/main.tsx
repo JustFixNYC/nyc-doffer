@@ -9,6 +9,7 @@ type AppProps = {
 type AppState = {
   address: string,
   submittedAddress: string,
+  currentSubmissionId: number,
 };
 
 class App extends Component<AppProps, AppState> {
@@ -17,12 +18,16 @@ class App extends Component<AppProps, AppState> {
     this.state = {
       address: '',
       submittedAddress: '',
+      currentSubmissionId: 0
     };
   }
 
   handleSubmit(e: Event) {
     e.preventDefault();
-    this.setState({submittedAddress: this.state.address});
+    this.setState({
+      submittedAddress: this.state.address,
+      currentSubmissionId: this.state.currentSubmissionId + 1
+    });
   }
 
   handleInput(e: Event) {
@@ -41,7 +46,7 @@ class App extends Component<AppProps, AppState> {
           <GeoDatalist id="address-list" address={this.state.address} />
           <input type="submit" value="Submit" disabled={isFormDisabled} />
         </form>
-        <ServerResults address={this.state.submittedAddress} onJobDone={() => this.setState({submittedAddress: ''})} />
+        <ServerResults key={this.state.currentSubmissionId} address={this.state.submittedAddress} onJobDone={() => this.setState({submittedAddress: ''})} />
       </div>
     );
   }

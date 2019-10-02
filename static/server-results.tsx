@@ -31,9 +31,12 @@ export class ServerResults extends Component<ServerResultsProps, State> {
   componentWillUnmount() {
     if (this.reconnectTimeout !== undefined) {
       window.clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = undefined;
     }
     if (this.ws) {
-      this.ws.close();
+      const ws = this.ws;
+      this.ws = null;
+      ws.close();
     }
   }
 
