@@ -138,7 +138,8 @@ export class ServerResults extends Component<ServerResultsProps, State> {
 }
 
 function PDFLink(props: {url: string, date: string, title: string}) {
-  return <a href={props.url} target="_blank" rel="noopener noreferrer">{props.date} {props.title}</a>;
+  const title = `${props.date} ${props.title}`;
+  return <a href={props.url} target="_blank" rel="noopener noreferrer"><img src="img/pdf-icon.svg" title={title} alt={title} className="pdf-icon" /></a>;
 }
 
 function PropertyInfo(props: PropertyInfo) {
@@ -154,7 +155,7 @@ function PropertyInfo(props: PropertyInfo) {
         {props.nopv.map(nopv => (
           <tr>
             <td>{nopv.period}</td>
-            <td><PDFLink title="NOPV" {...nopv} /></td>
+            <td><PDFLink title="Notice of Property Value (NOPV)" {...nopv} /></td>
             <td>{nopv.noi}</td>
           </tr>
         ))}
@@ -169,7 +170,7 @@ function PropertyInfo(props: PropertyInfo) {
         {props.soa.map(soa => (
           <tr>
             <td>{soa.period}</td>
-            <td><PDFLink title="SOA" {...soa} /></td>
+            <td><PDFLink title="Statement of Account (SOA)" {...soa} /></td>
             <td>{soa.rentStabilizedUnits}</td>
           </tr>
         ))}
