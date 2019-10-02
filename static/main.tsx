@@ -1,7 +1,7 @@
-import { decodeMessageFromServer, sendMessageToServer, getInputValue } from "./app-util.js";
+import { getInputValue } from "./app-util.js";
 import { GeoDatalist } from "./geo-datalist.js";
+import { ServerResults } from "./server-results.js";
 
-const RECONNECT_MS = 1000;
 
 type AppProps = {
 };
@@ -9,106 +9,20 @@ type AppProps = {
 type AppState = {
   address: string,
   submittedAddress: string,
-  logMessages: string[],
 };
 
 class App extends Component<AppProps, AppState> {
-  ws: WebSocket|null = null;
-  reconnectTimeout?: number;
-
   constructor(props: AppProps) {
     super(props);
     this.state = {
       address: '',
       submittedAddress: '',
-      logMessages: ['Connecting to server...'],
     };
-  }
-
-  componentDidMount() {
-    this.connectToServer();
-  }
-
-  componentWillUnmount() {
-    if (this.reconnectTimeout !== undefined) {
-      window.clearTimeout(this.reconnectTimeout);
-    }
-  }
-
-  addLogMessage(message: string) {
-    this.setState({'logMessages': [...this.state.logMessages, message]});
-  }
-
-  connectToServer() {
-    const protocol = location.protocol === "http:" ? "ws:" : "wss:";
-    const websocketURL = `${protocol}//${location.host}`;
-    const ws = new WebSocket(websocketURL);
-    ws.onopen = () => {
-      this.addLogMessage('Connection with server established.');
-      if (this.state.submittedAddress) {
-        sendMessageToServer(ws, {event: 'startJob', address: this.state.submittedAddress});        
-      }
-    };
-    ws.onerror = (error) => {
-      console.log("Connection error!", error);
-      this.handleConnectionLost();
-    };
-    ws.onclose = this.handleConnectionLost.bind(this);
-    ws.onmessage = this.handleMessageFromServer.bind(this);
-    this.ws = ws;
-    this.reconnectTimeout = undefined;
-  }
-
-  handleMessageFromServer(e: MessageEvent) { 
-    const message = decodeMessageFromServer(e);
-    if (message) {
-      console.log("Connection message!", message.event);
-      switch (message.event) {
-        case 'jobAccepted':
-        this.setState({'logMessages': []});
-        break;
-
-        case 'jobStatus':
-        this.addLogMessage(message.text);
-        break;
-
-        case 'jobError':
-        this.addLogMessage(message.message || 'Alas, an error occurred.');
-        this.setState({submittedAddress: ''});
-        break;
-
-        case 'jobInProgress':
-        this.addLogMessage('The server is still processing your previous request!');
-        break;
-
-        case 'jobFinished':
-        this.addLogMessage('The server has finished processing your request.');
-        this.setState({submittedAddress: ''});
-        break;
-      }
-    }
-  }
-
-  handleConnectionLost() {
-    if (this.ws && this.reconnectTimeout === undefined) {
-      this.ws = null;
-      this.addLogMessage('Unable to reach server. Attempting to reconnect...');
-      this.reconnectTimeout = window.setTimeout(this.connectToServer.bind(this), RECONNECT_MS);
-    }
   }
 
   handleSubmit(e: Event) {
     e.preventDefault();
-
-    if (this.ws && this.ws.readyState === this.ws.OPEN) {
-      const { address } = this.state;
-      this.setState({submittedAddress: address, logMessages: []});
-      if (address) {
-        sendMessageToServer(this.ws, {event: 'startJob', address});
-      }
-    } else {
-      this.addLogMessage("You are not connected to the server. Maybe reload the page?");
-    }
+    this.setState({submittedAddress: this.state.address});
   }
 
   handleInput(e: Event) {
@@ -123,13 +37,11 @@ class App extends Component<AppProps, AppState> {
         <h1>nyc-doffer</h1>
         <form onSubmit={this.handleSubmit.bind(this)}>
           <label for="address">Address</label>
-          <input type="text" id="address" name="address" list="address-list" onInput={this.handleInput.bind(this)} disabled={isFormDisabled} />
+          <input type="text" id="address" name="address" list="address-list" onInput={this.handleInput.bind(this)} />
           <GeoDatalist id="address-list" address={this.state.address} />
           <input type="submit" value="Submit" disabled={isFormDisabled} />
         </form>
-        <div class="messages">
-          {this.state.logMessages.map((message, i) => <div key={i}>{message}</div>)}
-        </div>
+        <ServerResults address={this.state.submittedAddress} onJobDone={() => this.setState({submittedAddress: ''})} />
       </div>
     );
   }
