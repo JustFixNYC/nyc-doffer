@@ -1,6 +1,5 @@
 import { decodeMessageFromServer, sendMessageToServer, getInputValue } from "./app-util.js";
-import { GeoSearchRequester } from "./geo-autocomplete.js";
-import { GeoSearchResults } from "../lib/geosearch.js";
+import { GeoDatalist } from "./geo-datalist.js";
 
 const RECONNECT_MS = 1000;
 
@@ -11,13 +10,11 @@ type AppState = {
   address: string,
   submittedAddress: string,
   logMessages: string[],
-  addressList: string[],
 };
 
 class App extends Component<AppProps, AppState> {
   ws: WebSocket|null = null;
   reconnectTimeout?: number;
-  requester: GeoSearchRequester;
 
   constructor(props: AppProps) {
     super(props);
@@ -25,15 +22,7 @@ class App extends Component<AppProps, AppState> {
       address: '',
       submittedAddress: '',
       logMessages: ['Connecting to server...'],
-      addressList: [],
     };
-    this.requester = new GeoSearchRequester({
-      createAbortController: () => new AbortController(),
-      fetch,
-      throttleMs: 250,
-      onError: this.handleRequesterError.bind(this),
-      onResults: this.handleRequesterResults.bind(this)
-    });
   }
 
   componentDidMount() {
@@ -44,7 +33,6 @@ class App extends Component<AppProps, AppState> {
     if (this.reconnectTimeout !== undefined) {
       window.clearTimeout(this.reconnectTimeout);
     }
-    this.requester.shutdown();
   }
 
   addLogMessage(message: string) {
@@ -125,21 +113,7 @@ class App extends Component<AppProps, AppState> {
 
   handleInput(e: Event) {
     const address = getInputValue(e);
-    this.requester.changeSearchRequest(address);
     this.setState({address});
-  }
-
-  handleRequesterError(e: Error) {
-    console.error(e);
-    this.setState({addressList: []});
-  }
-
-  handleRequesterResults(results: GeoSearchResults) {
-    const addressList = results.features.map(feature => {
-      const {name, borough} = feature.properties;
-      return `${name}, ${borough}`;
-    });
-    this.setState({addressList});
   }
 
   render() {
@@ -150,11 +124,7 @@ class App extends Component<AppProps, AppState> {
         <form onSubmit={this.handleSubmit.bind(this)}>
           <label for="address">Address</label>
           <input type="text" id="address" name="address" list="address-list" onInput={this.handleInput.bind(this)} disabled={isFormDisabled} />
-          <datalist id="address-list">
-            {this.state.addressList
-              .filter(address => address !== this.state.address)
-              .map((address, i) => <option key={i} value={address} />)}
-          </datalist>
+          <GeoDatalist id="address-list" address={this.state.address} />
           <input type="submit" value="Submit" disabled={isFormDisabled} />
         </form>
         <div class="messages">
