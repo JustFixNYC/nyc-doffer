@@ -125,6 +125,11 @@ type SOAInfo = SOALink & {
   rentStabilizedUnits: number|null,
 };
 
+type PropertyInfo = {
+  nopv: NOPVInfo[],
+  soa: SOAInfo[]
+};
+
 async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Promise<SOAInfo[]> {
   const results: SOAInfo[] = [];
 
@@ -145,42 +150,46 @@ async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Promi
   return results;
 }
 
-/** Performs the main CLI program on the given BBL. */
-async function mainForBBL(bbl: BBL, cache: Cache, log: Log = defaultLog) {
+async function getPropertyInfoForBBL(bbl: BBL, cache: Cache, log: Log = defaultLog): Promise<PropertyInfo> {
   const pageGetter = new PageGetter(log);
 
   try {
-    const nopvInfo = await getNOPVInfo(pageGetter, bbl, cache);
-    const soaInfo = await getSOAInfo(pageGetter, bbl, cache);
+    const nopv = await getNOPVInfo(pageGetter, bbl, cache);
+    const soa = await getSOAInfo(pageGetter, bbl, cache);
 
-    for (let {period, noi} of nopvInfo) {
-      if (noi) {
-        log(`The net operating income for ${period} is ${noi}.`);
-      }
-    }
-
-    for (let {period, rentStabilizedUnits} of soaInfo) {
-      if (rentStabilizedUnits) {
-        log(`During ${period}, the property had ${rentStabilizedUnits} rent stabilized units.`);
-      }
-    }
-
-    log("Done.");
+    return {nopv, soa};
   } finally {
     await pageGetter.shutdown();
   }
 }
 
-export async function mainWithSearchText(searchText: string, log: Log = defaultLog) {
-  const cache = new FileSystemCache(CACHE_DIR);
-  const geo = await cachedGeoSearch(searchText, cache, log);
+async function getPropertyInfoForAddress(address: string, cache: Cache, log: Log = defaultLog): Promise<PropertyInfo> {
+  const geo = await cachedGeoSearch(address, cache, log);
   if (!geo) {
     throw new GracefulError("The search text is invalid.");
   }
   const bbl = BBL.from(geo.pad_bbl);
   log(`Searching NYC DOF website for BBL ${bbl} (${geo.name}, ${geo.borough}).`);
 
-  return mainForBBL(bbl, cache, log);
+  return getPropertyInfoForBBL(bbl, cache, log);
+}
+
+export async function mainWithSearchText(searchText: string, log: Log = defaultLog) {
+  const cache = new FileSystemCache(CACHE_DIR);
+  const {nopv, soa} = await getPropertyInfoForAddress(searchText, cache, log);
+  for (let {period, noi} of nopv) {
+    if (noi) {
+      log(`The net operating income for ${period} is ${noi}.`);
+    }
+  }
+
+  for (let {period, rentStabilizedUnits} of soa) {
+    if (rentStabilizedUnits) {
+      log(`During ${period}, the property had ${rentStabilizedUnits} rent stabilized units.`);
+    }
+  }
+
+  log("Done.");
 }
 
 /** The main CLI program. */
