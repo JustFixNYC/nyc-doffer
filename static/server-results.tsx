@@ -157,13 +157,11 @@ function PropertyInfo(props: PropertyInfo) {
       <table>
         <tr>
           <th>Period</th>
-          <th>Statement (PDF)</th>
           <th>Net operating income</th>
         </tr>
         {props.nopv.map(nopv => (
           <tr>
-            <td>{nopv.period}</td>
-            <td><PDFLink title="Notice of Property Value (NOPV)" {...nopv} /></td>
+            <td><PDFLink title="Notice of Property Value (NOPV)" {...nopv} /> {nopv.period}</td>
             <td>{nopv.noi}</td>
           </tr>
         ))}
@@ -172,13 +170,11 @@ function PropertyInfo(props: PropertyInfo) {
       <table>
         <tr>
           <th>Period</th>
-          <th>Statement (PDF)</th>
           <th>Rent stabilized units</th>
         </tr>
         {props.soa.map(soa => (
           <tr>
-            <td>{soa.period} Q{soa.quarter}</td>
-            <td><PDFLink title="Statement of Account (SOA)" {...soa} /></td>
+            <td><PDFLink title="Statement of Account (SOA)" {...soa} /> {soa.period} Q{soa.quarter}</td>
             <td>{soa.rentStabilizedUnits}</td>
           </tr>
         ))}
