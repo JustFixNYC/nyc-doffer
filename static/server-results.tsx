@@ -108,7 +108,7 @@ export class ServerResults extends Component<ServerResultsProps, State> {
         break;
 
         case 'jobFinished':
-        this.addLogMessage('The server has finished processing your request.');
+        this.addLogMessage('DOF scrape complete.');
         this.setState({isJobDone: true, propertyInfo: message.propertyInfo});
         break;
       }
@@ -128,13 +128,28 @@ export class ServerResults extends Component<ServerResultsProps, State> {
 
     return (
       <div>
-        <div class="messages">
-          {this.state.logMessages.map((message, i) => <div key={i}>{message}</div>)}
-        </div>
+        <LogMessages messages={this.state.logMessages} />
         {propertyInfo && <PropertyInfo {...propertyInfo} />}
       </div>
     );
   }
+}
+
+function LogMessages(props: {messages: string[]}) {
+  const {messages} = props;
+
+  if (messages.length === 0) return null;
+
+  const latestMessage = messages[messages.length - 1];
+
+  return (
+    <details>
+      <summary>{latestMessage}</summary>
+      <div class="messages">
+        {messages.map((message, i) => <div key={i}>{message}</div>)}
+      </div>
+    </details>
+  );
 }
 
 function PDFLink(props: {url: string, date: string, title: string}) {
