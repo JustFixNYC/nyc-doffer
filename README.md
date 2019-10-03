@@ -56,6 +56,8 @@ To do so via Heroku, you can run:
 heroku container:push web && heroku container:release web
 ```
 
+You can also try using `node -r esm deploy-to-heroku.js`.
+
 ## Running tests
 
 Run tests via:
