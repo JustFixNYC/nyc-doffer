@@ -142,10 +142,18 @@ function PDFLink(props: {url: string, date: string, title: string}) {
   return <a href={props.url} target="_blank" rel="noopener noreferrer"><img src="img/pdf-icon.svg" title={title} alt={title} className="pdf-icon" /></a>;
 }
 
+function WOWLink(props: {bbl: string}) {
+  return <a href={`https://whoownswhat.justfix.nyc/bbl/${props.bbl}`} title={`Look up BBL ${props.bbl} on Who Owns What`} target="_blank" rel="noopener noreferrer">{props.bbl}</a>
+}
+
 function PropertyInfo(props: PropertyInfo) {
   return (
     <div>
-      <h2>Property value details</h2>
+      <h2>{props.name}, {props.borough}</h2>
+      <p>
+        Following are details for {props.name}, {props.borough} (BBL <WOWLink bbl={props.bbl} />) scraped from individual statements on the NYC DOF website.
+      </p>
+      <h3>Property value details</h3>
       <table>
         <tr>
           <th>Period</th>
@@ -160,7 +168,7 @@ function PropertyInfo(props: PropertyInfo) {
           </tr>
         ))}
       </table>
-      <h2>Tax bill details</h2>
+      <h3>Tax bill details</h3>
       <table>
         <tr>
           <th>Period</th>
@@ -169,7 +177,7 @@ function PropertyInfo(props: PropertyInfo) {
         </tr>
         {props.soa.map(soa => (
           <tr>
-            <td>{soa.period}</td>
+            <td>{soa.period} Q{soa.quarter}</td>
             <td><PDFLink title="Statement of Account (SOA)" {...soa} /></td>
             <td>{soa.rentStabilizedUnits}</td>
           </tr>

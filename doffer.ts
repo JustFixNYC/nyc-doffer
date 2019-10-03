@@ -126,6 +126,9 @@ type SOAInfo = SOALink & {
 };
 
 export type PropertyInfo = {
+  name: string,
+  borough: string,
+  bbl: string,
   nopv: NOPVInfo[],
   soa: SOAInfo[]
 };
@@ -150,14 +153,14 @@ async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: Cache): Promi
   return results;
 }
 
-async function getPropertyInfoForBBL(bbl: BBL, cache: Cache, log: Log = defaultLog): Promise<PropertyInfo> {
+async function getPropertyInfoForBBL(bbl: BBL, name: string, borough: string, cache: Cache, log: Log = defaultLog): Promise<PropertyInfo> {
   const pageGetter = new PageGetter(log);
 
   try {
     const nopv = await getNOPVInfo(pageGetter, bbl, cache);
     const soa = await getSOAInfo(pageGetter, bbl, cache);
 
-    return {nopv, soa};
+    return {bbl: bbl.toString(), name, borough, nopv, soa};
   } finally {
     await pageGetter.shutdown();
   }
@@ -169,9 +172,10 @@ export async function getPropertyInfoForAddress(address: string, cache: Cache, l
     throw new GracefulError("The search text is invalid.");
   }
   const bbl = BBL.from(geo.pad_bbl);
+
   log(`Searching NYC DOF website for BBL ${bbl} (${geo.name}, ${geo.borough}).`);
 
-  return getPropertyInfoForBBL(bbl, cache, log);
+  return getPropertyInfoForBBL(bbl, geo.name, geo.borough, cache, log);
 }
 
 export async function mainWithSearchText(searchText: string, log: Log = defaultLog) {
