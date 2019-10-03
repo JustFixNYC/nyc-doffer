@@ -53,8 +53,7 @@ as it isn't designed to scale beyond a single process.
 To do so via Heroku, you can run:
 
 ```
-heroku container:push web
-heroku container:release web
+heroku container:push web && heroku container:release web
 ```
 
 ## Running tests
