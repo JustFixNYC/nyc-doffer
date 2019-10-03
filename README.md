@@ -1,3 +1,12 @@
+This is a tool that scrapes the NYC Department of Finance (DOF) website
+for financial statements and provides the following data:
+
+* Net operating income
+* Rent stabilized units
+
+The tool's architecture makes it straightforward to extract additional
+metrics from the statements if needed.
+
 ## Installation
 
 You will need `pdftotext` version 4.02 on your path, or defined via the
@@ -27,14 +36,26 @@ node -r esm doffer.js "654 park place, brooklyn"
 
 ## Running the web server
 
-You can run a web server for development and testing purposes only
-(it isn't designed to scale beyond a single process):
+You can run a web server that asks the user for an address, scrapes it,
+and returns a table of scraped data with links back to source PDF files:
 
 ```
 node -r esm webserver.js
 ```
 
 Then visit http://localhost:3000.
+
+### Deploying the web server
+
+You can deploy the web server **for development and testing purposes only**,
+as it isn't designed to scale beyond a single process.
+
+To do so via Heroku, you can run:
+
+```
+heroku container:push web
+heroku container:release web
+```
 
 ## Running tests
 
