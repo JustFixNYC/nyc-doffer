@@ -21,6 +21,7 @@
     "mocha": "^6.2.0"
   },
   "dependencies": {
+    "@microsoft/ts-command-line": "^4.3.2",
     "@types/cheerio": "^0.22.13",
     "@types/dotenv": "^6.1.1",
     "@types/express": "^4.17.1",
