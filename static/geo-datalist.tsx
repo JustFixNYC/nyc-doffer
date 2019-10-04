@@ -1,3 +1,4 @@
+import { h, Component } from 'preact';
 import { GeoSearchResults } from "../lib/geosearch.js";
 import { GeoSearchRequester } from "./geo-autocomplete.js";
 

@@ -1,3 +1,4 @@
+import { h, Component, render } from 'preact';
 import { getInputValue } from "./app-util.js";
 import { GeoDatalist } from "./geo-datalist.js";
 import { ServerResults } from "./server-results.js";
@@ -60,6 +61,7 @@ class App extends Component<AppProps, AppState> {
 
   render() {
     const isFormDisabled = !!this.state.submittedAddress;
+
     return (
       <div>
         <h1>nyc-doffer</h1>

@@ -1,3 +1,4 @@
+import { h, Component } from 'preact';
 import { decodeMessageFromServer, sendMessageToServer } from "./app-util.js";
 import { PropertyInfo } from "../doffer.js";
 

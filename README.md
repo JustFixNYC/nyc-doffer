@@ -31,7 +31,7 @@ run `yarn watch` in a separate terminal.
 You can run the tool by passing it an address to search for, e.g.:
 
 ```
-node -r esm doffer.js "654 park place, brooklyn"
+node doffer.js "654 park place, brooklyn"
 ```
 
 ## Running the web server
@@ -40,7 +40,7 @@ You can run a web server that asks the user for an address, scrapes it,
 and returns a table of scraped data with links back to source PDF files:
 
 ```
-node -r esm webserver.js
+node webserver.js
 ```
 
 Then visit http://localhost:3000.
@@ -56,7 +56,7 @@ To do so via Heroku, you can run:
 heroku container:push web && heroku container:release web
 ```
 
-You can also try using `node -r esm deploy-to-heroku.js`.
+You can also try using `node deploy-to-heroku.js`.
 
 ## Running tests
 
@@ -73,5 +73,5 @@ You can also run tests in watch mode. To do this, use `yarn test:watch`.
 To run tests against the DOF website to make sure scraping works, run:
 
 ```
-node -r esm test-dof-site.js
+node test-dof-site.js
 ```

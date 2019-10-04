@@ -111,9 +111,11 @@ function decodeMessageFromClient(data: ws.Data): DofferWebSocketClientMessage|nu
   }
 }
 
-app.use(express.static(path.join(__dirname, 'static')));
+// This will place priority on serving Parcel-generated files.
+app.use(express.static(path.join(__dirname, 'dist')));
 
-app.use('/vendor/preact', express.static(path.join(__dirname, 'node_modules', 'preact', 'dist')));
+// This ensures our static assets are served.
+app.use(express.static(path.join(__dirname, 'static')));
 
 wss.on('connection', ws => {
   let currentJob: Job|undefined;

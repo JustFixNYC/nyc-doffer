@@ -4,5 +4,7 @@ screenshot_*.png
 node_modules/
 .dof-cache/
 .env
+.cache/
+dist/
 
 .git/
