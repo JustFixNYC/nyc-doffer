@@ -1,3 +1,5 @@
+[![Actions Status](https://github.com/JustFixNYC/nyc-doffer/workflows/Node%20CI/badge.svg)](https://github.com/JustFixNYC/nyc-doffer/actions)
+
 This is a tool that scrapes the NYC Department of Finance (DOF) website
 for financial statements and provides the following data:
 
