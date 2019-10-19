@@ -1,9 +1,23 @@
+import readline from 'readline';
 import dotenv from 'dotenv';
 import { expect } from 'chai';
 import { S3Cache } from './lib/cache-s3';
 import { S3Client } from '@aws-sdk/client-s3-node';
 
 dotenv.config();
+
+async function question(prompt: string): Promise<string> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+  return new Promise((resolve, reject) => {
+    rl.question(prompt, (answer) => {
+      rl.close();
+      resolve(answer);
+    });
+  });
+}
 
 function getRequiredEnv(name: string): string {
   const value = process.env[name];
@@ -16,7 +30,7 @@ function getRequiredEnv(name: string): string {
 async function main() {
   const bucket = getRequiredEnv('S3_BUCKET');
   const cache = new S3Cache(new S3Client({}), bucket);
-  const key = `s3-cache-test-${Date.now()}`;
+  const key = `s3-cache-test-${Date.now()}.txt`;
   const content = `here are some test contents ${key}\u2026`;
   const buf = Buffer.from(content, 'utf8');
 
@@ -28,6 +42,8 @@ async function main() {
     const lazyGetter = () => Promise.reject(new Error(`${key} should already be in S3!`));
     const gotBuf = await cache.get(key, lazyGetter);
     expect(gotBuf.toString('utf8')).to.equal(content);
+    console.log(`Looks good! You can view the cached file at ${cache.urlForKey(key)}.`);
+    await question('Press enter to delete the cached file.');
   } finally {
     console.log(`Deleting ${key}...`);
     await cache.delete(key);

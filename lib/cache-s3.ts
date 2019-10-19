@@ -7,6 +7,10 @@ export class S3Cache implements Cache<Buffer> {
   constructor(readonly client: S3Client, readonly bucket: string) {
   }
 
+  urlForKey(key: string): string {
+    return `https://${this.bucket}.s3.amazonaws.com/${key}`;
+  }
+
   async delete(key: string): Promise<void> {
     const deleteObjectCmd = new DeleteObjectCommand({
       Bucket: this.bucket,
