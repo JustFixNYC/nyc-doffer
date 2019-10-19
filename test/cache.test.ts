@@ -1,9 +1,9 @@
 import fs from 'fs';
 import path from 'path';
 import { expect } from 'chai';
-import { FileSystemCache, CacheGetter, asBrotliCache, Cache } from '../lib/cache';
+import { FileSystemCache, CacheGetter, asBrotliCache, ICache } from '../lib/cache';
 
-class MemoryCache implements Cache {
+class MemoryCache implements ICache {
   constructor(readonly contents: Map<string, Buffer> = new Map()) {
   }
 

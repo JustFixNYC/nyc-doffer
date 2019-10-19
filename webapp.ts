@@ -3,7 +3,7 @@ import http from 'http';
 import express from 'express';
 import ws from 'ws';
 import { GracefulError, CACHE_DIR, getPropertyInfoForAddress, PropertyInfo } from './doffer';
-import { FileSystemCache, Cache } from './lib/cache';
+import { FileSystemCache, ICache } from './lib/cache';
 
 export type DofferWebSocketClientMessage = {
   event: 'startJob',
@@ -36,7 +36,7 @@ class Job {
   webSockets: ws[] = [];
   logMessages: string[] = [];
 
-  constructor(readonly address: string, readonly cache: Cache, readonly onFinished: () => void) {
+  constructor(readonly address: string, readonly cache: ICache, readonly onFinished: () => void) {
     this.start();
   }
 

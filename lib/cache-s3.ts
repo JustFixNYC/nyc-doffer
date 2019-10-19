@@ -1,9 +1,9 @@
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3-node";
 import mime from 'mime';
-import { Cache, CacheGetter } from "./cache";
+import { ICache, CacheGetter } from "./cache";
 import { collectStream } from "./download";
 
-export class S3Cache implements Cache<Buffer> {
+export class S3Cache implements ICache<Buffer> {
   constructor(readonly client: S3Client, readonly bucket: string) {
   }
 

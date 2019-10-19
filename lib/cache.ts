@@ -4,18 +4,18 @@ import zlib from 'zlib';
 
 export type CacheGetter<T = Buffer> = (key: string) => Promise<T>;
 
-export interface Cache<T = Buffer> {
+export interface ICache<T = Buffer> {
   get(key: string, lazyGetter: CacheGetter<T>): Promise<T>;
   set(key: string, value: T): Promise<void>;
 }
 
-export interface CacheConverter<T> {
+export interface ICacheConverter<T> {
   fromBuffer(value: Buffer): T;
   toBuffer(value: T): Buffer;
 }
 
-export class ConvertibleCache<T> implements Cache<T> {
-  constructor(readonly cache: Cache, readonly converter: CacheConverter<T>) {
+export class ConvertibleCache<T> implements ICache<T> {
+  constructor(readonly cache: ICache, readonly converter: ICacheConverter<T>) {
   }
 
   async get(key: string, lazyGetter: CacheGetter<T>): Promise<T> {
@@ -30,7 +30,7 @@ export class ConvertibleCache<T> implements Cache<T> {
   }
 }
 
-export class TextCacheConverter implements CacheConverter<string> {
+export class TextCacheConverter implements ICacheConverter<string> {
   constructor(readonly encoding?: BufferEncoding) {
   }
 
@@ -43,11 +43,11 @@ export class TextCacheConverter implements CacheConverter<string> {
   }
 }
 
-export function asTextCache(cache: Cache, encoding?: BufferEncoding): Cache<string> {
+export function asTextCache(cache: ICache, encoding?: BufferEncoding): ICache<string> {
   return new ConvertibleCache(cache, new TextCacheConverter(encoding));
 }
 
-export class JSONCacheConverter<T> implements CacheConverter<T> {
+export class JSONCacheConverter<T> implements ICacheConverter<T> {
   constructor(readonly encoding?: BufferEncoding) {
   }
 
@@ -60,7 +60,7 @@ export class JSONCacheConverter<T> implements CacheConverter<T> {
   }
 }
 
-export function asJSONCache<T>(cache: Cache, encoding?: BufferEncoding): Cache<T> {
+export function asJSONCache<T>(cache: ICache, encoding?: BufferEncoding): ICache<T> {
   return new ConvertibleCache(cache, new JSONCacheConverter<T>(encoding));
 }
 
@@ -73,7 +73,7 @@ function brotliModeForDataType(type: BrotliDataType): number {
   }
 }
 
-export class BrotliCacheConverter implements CacheConverter<Buffer> {
+export class BrotliCacheConverter implements ICacheConverter<Buffer> {
   constructor(readonly dataType: BrotliDataType, readonly quality: number) {
   }
 
@@ -91,11 +91,11 @@ export class BrotliCacheConverter implements CacheConverter<Buffer> {
   }
 }
 
-export function asBrotliCache(cache: Cache, dataType: BrotliDataType = 'generic', quality: number = 11): Cache {
+export function asBrotliCache(cache: ICache, dataType: BrotliDataType = 'generic', quality: number = 11): ICache {
   return new ConvertibleCache(cache, new BrotliCacheConverter(dataType, quality));
 }
 
-export class FileSystemCache implements Cache {
+export class FileSystemCache implements ICache {
   constructor(readonly rootDir: string) {
   }
 
