@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { expect } from 'chai';
-import { FileSystemCacheBackend, DOFCacheGetter, asBrotliCache, DOFCacheBackend, DOFCache } from '../lib/cache';
+import { FileSystemCacheBackend, DOFCacheGetter, asBrotliCache, DOFCacheBackend, DOFCache, getBrotliDataType } from '../lib/cache';
 
 class MemoryCacheBackend implements DOFCacheBackend {
   constructor(readonly contents: Map<string, Buffer> = new Map()) {
@@ -69,10 +69,26 @@ describe('FileSystemCache', () => {
 
 describe("BrotliCache", () => {
   it('works', async () => {
-    const cache = asBrotliCache(new DOFCache(new MemoryCacheBackend()), 'text');
+    const backend = new MemoryCacheBackend();
+    const cache = asBrotliCache(new DOFCache(backend));
     const buf = Buffer.from('halloo\u2026', 'utf8');
-    await cache.set('boop', buf);
-    const outBuf = await cache.lazyGet('boop', neverCall);
+    await cache.set('boop.txt', buf);
+    const outBuf = await cache.lazyGet('boop.txt', neverCall);
     expect(outBuf.toString('utf8')).to.equal('halloo\u2026');
+    expect(await backend.get('boop.txt.br')).to.not.be.undefined;
+  });
+});
+
+describe("getBrotliDataType", () => {
+  it("returns generic for unknown types", () => {
+    expect(getBrotliDataType('blah')).to.equal('generic');
+    expect(getBrotliDataType('blah.zoof')).to.equal('generic');
+    expect(getBrotliDataType('blahhh.pdf')).to.equal('generic');
+  });
+
+  it("returns text for text types", () => {
+    expect(getBrotliDataType('blah.txt')).to.equal('text');
+    expect(getBrotliDataType('blah.json')).to.equal('text');
+    expect(getBrotliDataType('blah.html')).to.equal('text');
   });
 });

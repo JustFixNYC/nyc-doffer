@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import zlib from 'zlib';
 import { pathToFileURL } from 'url';
+import mime from 'mime';
 
 export const DOF_CACHE_TEXT_ENCODING: BufferEncoding = 'utf8';
 
@@ -47,26 +48,35 @@ export interface DOFCacheBackend<T = Buffer> {
 }
 
 export interface DOFCacheConverter<T> {
-  decode(value: Buffer): T;
-  encode(value: T): Buffer;
+  extension?: string;
+  decode(value: Buffer, key: string): T;
+  encode(value: T, key: string): Buffer;
 }
 
 export class DOFConvertibleCacheBackend<T> implements DOFCacheBackend<T> {
   constructor(readonly backend: DOFCacheBackend, readonly converter: DOFCacheConverter<T>) {
   }
 
+  private transformKey(key: string): string {
+    const {extension} = this.converter;
+    if (extension) {
+      return `${key}${extension}`;
+    }
+    return key;
+  }
+
   async get(key: string): Promise<T|undefined> {
-    const buf = await this.backend.get(key);
+    const buf = await this.backend.get(this.transformKey(key));
     if (!buf) return undefined;
-    return this.converter.decode(buf);
+    return this.converter.decode(buf, key);
   }
 
   async set(key: string, value: T): Promise<void> {
-    return this.backend.set(key, this.converter.encode(value));
+    return this.backend.set(this.transformKey(key), this.converter.encode(value, key));
   }
 
   async delete(key: string): Promise<void> {
-    return this.backend.delete(key);
+    return this.backend.delete(this.transformKey(key));
   }
 }
 
@@ -113,26 +123,35 @@ function brotliModeForDataType(type: BrotliDataType): number {
   }
 }
 
+export function getBrotliDataType(key: string): BrotliDataType {
+  const mimeType = mime.getType(key) || '';
+  if (mimeType.startsWith('text/') || mimeType === 'application/json') return 'text';
+  return 'generic';
+}
+
 export class BrotliCacheConverter implements DOFCacheConverter<Buffer> {
-  constructor(readonly dataType: BrotliDataType, readonly quality: number) {
+  constructor(readonly quality: number) {
   }
+
+  extension = '.br';
 
   decode(value: Buffer): Buffer {
     return zlib.brotliDecompressSync(value);
   }
 
-  encode(value: Buffer): Buffer {
+  encode(value: Buffer, key: string): Buffer {
+    const dataType = getBrotliDataType(key);
     return zlib.brotliCompressSync(value, {
       params: {
-        [zlib.constants.BROTLI_PARAM_MODE]: brotliModeForDataType(this.dataType),
+        [zlib.constants.BROTLI_PARAM_MODE]: brotliModeForDataType(dataType),
         [zlib.constants.BROTLI_PARAM_QUALITY]: this.quality,
       }
     });
   }
 }
 
-export function asBrotliCache(cache: DOFCache, dataType: BrotliDataType = 'generic', quality: number = 11): DOFCache {
-  return new DOFCache(new DOFConvertibleCacheBackend(cache.backend, new BrotliCacheConverter(dataType, quality)));
+export function asBrotliCache(cache: DOFCache, quality: number = 11): DOFCache {
+  return new DOFCache(new DOFConvertibleCacheBackend(cache.backend, new BrotliCacheConverter(quality)));
 }
 
 export class FileSystemCacheBackend implements DOFCacheBackend {

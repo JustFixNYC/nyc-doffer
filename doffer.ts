@@ -44,8 +44,8 @@ class PageGetter {
   }
 
   async cachedGetPageHTML(bbl: BBL, linkName: SidebarLinkName, cache: DOFCache, cacheSubkey: string): Promise<string> {
-    return asTextCache(asBrotliCache(cache, 'text')).lazyGet(
-      `html/${bbl.asPath()}/${cacheSubkey}.html.br`,
+    return asTextCache(asBrotliCache(cache)).lazyGet(
+      `html/${bbl.asPath()}/${cacheSubkey}.html`,
       () => this.getPage(bbl, linkName)
     );
   }
