@@ -1,9 +1,9 @@
 import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3-node";
 import mime from 'mime';
-import { ICache, CacheGetter } from "./cache";
+import { DOFCacheBackend } from "./cache";
 import { collectStream } from "./download";
 
-export class S3Cache implements ICache<Buffer> {
+export class S3CacheBackend implements DOFCacheBackend<Buffer> {
   constructor(readonly client: S3Client, readonly bucket: string) {
   }
 
@@ -19,7 +19,7 @@ export class S3Cache implements ICache<Buffer> {
     await this.client.send(deleteObjectCmd);
   }
 
-  async get(key: string, lazyGetter: CacheGetter<Buffer>): Promise<Buffer> {
+  async get(key: string): Promise<Buffer|undefined> {
     const getObjectCmd = new GetObjectCommand({
       Bucket: this.bucket,
       Key: key
@@ -28,9 +28,7 @@ export class S3Cache implements ICache<Buffer> {
     if (result.Body) {
       return await collectStream(result.Body);
     }
-    const buf = await lazyGetter(key);
-    await this.set(key, buf);
-    return buf;
+    return undefined;
   }
 
   async set(key: string, value: Buffer): Promise<void> {

@@ -1,19 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 import { expect } from 'chai';
-import { FileSystemCache, CacheGetter, asBrotliCache, ICache } from '../lib/cache';
+import { FileSystemCacheBackend, DOFCacheGetter, asBrotliCache, DOFCacheBackend, DOFCache } from '../lib/cache';
 
-class MemoryCache implements ICache {
+class MemoryCacheBackend implements DOFCacheBackend {
   constructor(readonly contents: Map<string, Buffer> = new Map()) {
   }
 
-  async get(key: string, lazyGetter: CacheGetter): Promise<Buffer> {
-    let value = this.contents.get(key);
-    if (value === undefined) {
-      value = await lazyGetter(key);
-      this.contents.set(key, value);
-    }
-    return value;
+  async get(key: string): Promise<Buffer|undefined> {
+    return this.contents.get(key);
   }
 
   async set(key: string, value: Buffer): Promise<void> {
@@ -45,21 +40,21 @@ var recursiveRmdirSync = function(dir: string) {
 	fs.rmdirSync(dir);
 };
 
-const neverCall: CacheGetter = () => Promise.reject(new Error('this should not be called!'));
+const neverCall: DOFCacheGetter = () => Promise.reject(new Error('this should not be called!'));
 
 describe('FileSystemCache', () => {
   it('works', async () => {
     const tempDir = fs.mkdtempSync('doffer-fscache-test');
     try {
-      const cache = new FileSystemCache(tempDir);
+      const cache = new DOFCache(new FileSystemCacheBackend(tempDir));
 
-      const value = await cache.get('foo/bar/123', async (key: string) => {
+      const value = await cache.lazyGet('foo/bar/123', async (key: string) => {
         expect(key).to.equal('foo/bar/123');
         return Buffer.from('boop', 'utf-8');
       });
       expect(value.toString()).to.equal('boop');
 
-      const precachedValue = await cache.get('foo/bar/123', neverCall);
+      const precachedValue = await cache.lazyGet('foo/bar/123', neverCall);
       expect(precachedValue.toString()).to.equal('boop');
     } finally {
       recursiveRmdirSync(tempDir);
@@ -69,10 +64,10 @@ describe('FileSystemCache', () => {
 
 describe("BrotliCache", () => {
   it('works', async () => {
-    const cache = asBrotliCache(new MemoryCache(), 'text');
+    const cache = asBrotliCache(new DOFCache(new MemoryCacheBackend()), 'text');
     const buf = Buffer.from('halloo\u2026', 'utf8');
     await cache.set('boop', buf);
-    const outBuf = await cache.get('boop', neverCall);
+    const outBuf = await cache.lazyGet('boop', neverCall);
     expect(outBuf.toString('utf8')).to.equal('halloo\u2026');
   });
 });

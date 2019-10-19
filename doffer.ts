@@ -2,7 +2,7 @@ import path from 'path';
 import puppeteer from 'puppeteer';
 import dotenv from 'dotenv';
 
-import { FileSystemCache, ICache, asTextCache, asJSONCache, asBrotliCache } from './lib/cache';
+import { FileSystemCacheBackend, asTextCache, asJSONCache, asBrotliCache, DOFCache } from './lib/cache';
 import { BBL } from './lib/bbl';
 import { searchForBBL, gotoSidebarLink, SidebarLinkName, parseNOPVLinks, NOPVLink, SOALink, parseSOALinks } from './lib/dof';
 import { getPageHTML } from './lib/page-util';
@@ -47,23 +47,23 @@ class PageGetter {
     return getPageHTML(this.page);
   }
 
-  async cachedGetPageHTML(bbl: BBL, linkName: SidebarLinkName, cache: ICache, cacheSubkey: string): Promise<string> {
-    return asTextCache(asBrotliCache(cache, 'text'), CACHE_HTML_ENCODING).get(
+  async cachedGetPageHTML(bbl: BBL, linkName: SidebarLinkName, cache: DOFCache, cacheSubkey: string): Promise<string> {
+    return asTextCache(asBrotliCache(cache, 'text'), CACHE_HTML_ENCODING).lazyGet(
       `html/${bbl.asPath()}/${cacheSubkey}.html.br`,
       () => this.getPage(bbl, linkName)
     );
   }
 
-  async cachedDownloadPDF(bbl: BBL, url: string, name: string, cache: ICache, cacheSubkey: string): Promise<Buffer> {
-    return cache.get(`pdf/${bbl.asPath()}/${cacheSubkey}.pdf`, () => {
+  async cachedDownloadPDF(bbl: BBL, url: string, name: string, cache: DOFCache, cacheSubkey: string): Promise<Buffer> {
+    return cache.lazyGet(`pdf/${bbl.asPath()}/${cacheSubkey}.pdf`, () => {
       this.log(`Downloading ${name} PDF...`);
       return download(url);
     });
   }
 
-  async cachedDownloadAndConvertPDFToText(bbl: BBL, url: string, name: string, cache: ICache, cacheSubkey: string, extraFlags?: PDFToTextFlags[]): Promise<string> {
+  async cachedDownloadAndConvertPDFToText(bbl: BBL, url: string, name: string, cache: DOFCache, cacheSubkey: string, extraFlags?: PDFToTextFlags[]): Promise<string> {
     const pdfToTextKey = `pdftotext-${EXPECTED_PDFTOTEXT_VERSION}` + (extraFlags || []).join('');
-    return asTextCache(cache, CACHE_TEXT_ENCODING).get(`txt/${bbl.asPath()}/${cacheSubkey}_${pdfToTextKey}.txt`, async () => {
+    return asTextCache(cache, CACHE_TEXT_ENCODING).lazyGet(`txt/${bbl.asPath()}/${cacheSubkey}_${pdfToTextKey}.txt`, async () => {
       const pdfData = await this.cachedDownloadPDF(bbl, url, name, cache, cacheSubkey);
       this.log(`Converting ${name} PDF to text...`);
       return convertPDFToText(pdfData, extraFlags);
@@ -87,10 +87,10 @@ class PageGetter {
  * Attempt to geolocate the given search text and return the result, using
  * a cached value if possible.
  */
-async function cachedGeoSearch(text: string, cache: ICache, log: Log = defaultLog): Promise<GeoSearchProperties|null> {
+async function cachedGeoSearch(text: string, cache: DOFCache, log: Log = defaultLog): Promise<GeoSearchProperties|null> {
   const simpleText = text.toLowerCase().replace(/[^a-z0-9\- ]/g, '');
   const cacheKey = `geosearch/${simpleText.replace(/ /g, '_')}.json`;
-  return asJSONCache<GeoSearchProperties|null>(cache).get(cacheKey, () => {
+  return asJSONCache<GeoSearchProperties|null>(cache).lazyGet(cacheKey, () => {
     log(`Geocoding "${simpleText}"...`);
     return getFirstGeoSearchResult(simpleText);
   });
@@ -103,7 +103,7 @@ type NOPVInfo = NOPVLink & {
 };
 
 /** Retrieves and extracts all information related to a BBL's Notices of Property Value. */
-async function getNOPVInfo(pageGetter: PageGetter, bbl: BBL, cache: ICache): Promise<NOPVInfo[]>  {
+async function getNOPVInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache): Promise<NOPVInfo[]>  {
   const results: NOPVInfo[] = [];
 
   const page = SidebarLinkName.noticesOfPropertyValue;
@@ -132,7 +132,7 @@ export type PropertyInfo = {
   soa: SOAInfo[]
 };
 
-async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: ICache): Promise<SOAInfo[]> {
+async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache): Promise<SOAInfo[]> {
   const results: SOAInfo[] = [];
 
   const page = SidebarLinkName.propertyTaxBills;
@@ -152,7 +152,7 @@ async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: ICache): Prom
   return results;
 }
 
-async function getPropertyInfoForBBL(bbl: BBL, name: string, borough: string, cache: ICache, log: Log = defaultLog): Promise<PropertyInfo> {
+async function getPropertyInfoForBBL(bbl: BBL, name: string, borough: string, cache: DOFCache, log: Log = defaultLog): Promise<PropertyInfo> {
   const pageGetter = new PageGetter(log);
 
   try {
@@ -165,7 +165,7 @@ async function getPropertyInfoForBBL(bbl: BBL, name: string, borough: string, ca
   }
 }
 
-export async function getPropertyInfoForAddress(address: string, cache: ICache, log: Log = defaultLog): Promise<PropertyInfo> {
+export async function getPropertyInfoForAddress(address: string, cache: DOFCache, log: Log = defaultLog): Promise<PropertyInfo> {
   const geo = await cachedGeoSearch(address, cache, log);
   if (!geo) {
     throw new GracefulError("The search text is invalid.");
@@ -178,7 +178,7 @@ export async function getPropertyInfoForAddress(address: string, cache: ICache, 
 }
 
 export async function mainWithSearchText(searchText: string, log: Log = defaultLog) {
-  const cache = new FileSystemCache(CACHE_DIR);
+  const cache = new DOFCache(new FileSystemCacheBackend(CACHE_DIR));
   const {nopv, soa} = await getPropertyInfoForAddress(searchText, cache, log);
   for (let {period, noi} of nopv) {
     if (noi) {

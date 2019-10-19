@@ -2,40 +2,65 @@ import fs from 'fs';
 import path from 'path';
 import zlib from 'zlib';
 
-export type CacheGetter<T = Buffer> = (key: string) => Promise<T>;
+export type DOFCacheGetter<T = Buffer> = (key: string) => Promise<T>;
 
-export interface ICache<T = Buffer> {
-  get(key: string, lazyGetter: CacheGetter<T>): Promise<T>;
+export class DOFCache<T = Buffer> {
+  constructor(readonly backend: DOFCacheBackend<T>) {
+  }
+
+  async lazyGet(key: string, lazyGetter: DOFCacheGetter<T>): Promise<T> {
+    let value = await this.get(key);
+    if (value === undefined) {
+      value = await lazyGetter(key);
+      await this.set(key, value);
+    }
+    return value;
+  }
+
+  get(key: string): Promise<T|undefined> {
+    return this.backend.get(key);
+  }
+
+  set(key: string, value: T): Promise<void> {
+    return this.backend.set(key, value);
+  }
+
+  delete(key: string): Promise<void> {
+    return this.backend.delete(key);
+  }
+}
+
+export interface DOFCacheBackend<T = Buffer> {
+  get(key: string): Promise<T|undefined>;
   set(key: string, value: T): Promise<void>;
   delete(key: string): Promise<void>;
 }
 
-export interface ICacheConverter<T> {
+export interface DOFCacheConverter<T> {
   fromBuffer(value: Buffer): T;
   toBuffer(value: T): Buffer;
 }
 
-export class ConvertibleCache<T> implements ICache<T> {
-  constructor(readonly cache: ICache, readonly converter: ICacheConverter<T>) {
+export class DOFConvertibleCacheBackend<T> implements DOFCacheBackend<T> {
+  constructor(readonly backend: DOFCacheBackend, readonly converter: DOFCacheConverter<T>) {
   }
 
-  async get(key: string, lazyGetter: CacheGetter<T>): Promise<T> {
-    const buf = await this.cache.get(key, async () => {
-      return this.converter.toBuffer(await lazyGetter(key));
-    });
+  async get(key: string): Promise<T|undefined> {
+    const buf = await this.backend.get(key);
+    if (!buf) return undefined;
     return this.converter.fromBuffer(buf);
   }
 
   async set(key: string, value: T): Promise<void> {
-    return this.cache.set(key, this.converter.toBuffer(value));
+    return this.backend.set(key, this.converter.toBuffer(value));
   }
 
   async delete(key: string): Promise<void> {
-    return this.cache.delete(key);
+    return this.backend.delete(key);
   }
 }
 
-export class TextCacheConverter implements ICacheConverter<string> {
+export class TextCacheConverter implements DOFCacheConverter<string> {
   constructor(readonly encoding?: BufferEncoding) {
   }
 
@@ -48,11 +73,11 @@ export class TextCacheConverter implements ICacheConverter<string> {
   }
 }
 
-export function asTextCache(cache: ICache, encoding?: BufferEncoding): ICache<string> {
-  return new ConvertibleCache(cache, new TextCacheConverter(encoding));
+export function asTextCache(cache: DOFCache, encoding?: BufferEncoding): DOFCache<string> {
+  return new DOFCache(new DOFConvertibleCacheBackend(cache.backend, new TextCacheConverter(encoding)));
 }
 
-export class JSONCacheConverter<T> implements ICacheConverter<T> {
+export class JSONCacheConverter<T> implements DOFCacheConverter<T> {
   constructor(readonly encoding?: BufferEncoding) {
   }
 
@@ -65,8 +90,8 @@ export class JSONCacheConverter<T> implements ICacheConverter<T> {
   }
 }
 
-export function asJSONCache<T>(cache: ICache, encoding?: BufferEncoding): ICache<T> {
-  return new ConvertibleCache(cache, new JSONCacheConverter<T>(encoding));
+export function asJSONCache<T>(cache: DOFCache, encoding?: BufferEncoding): DOFCache<T> {
+  return new DOFCache(new DOFConvertibleCacheBackend(cache.backend, new JSONCacheConverter<T>(encoding)));
 }
 
 export type BrotliDataType = 'text'|'generic';
@@ -78,7 +103,7 @@ function brotliModeForDataType(type: BrotliDataType): number {
   }
 }
 
-export class BrotliCacheConverter implements ICacheConverter<Buffer> {
+export class BrotliCacheConverter implements DOFCacheConverter<Buffer> {
   constructor(readonly dataType: BrotliDataType, readonly quality: number) {
   }
 
@@ -96,11 +121,11 @@ export class BrotliCacheConverter implements ICacheConverter<Buffer> {
   }
 }
 
-export function asBrotliCache(cache: ICache, dataType: BrotliDataType = 'generic', quality: number = 11): ICache {
-  return new ConvertibleCache(cache, new BrotliCacheConverter(dataType, quality));
+export function asBrotliCache(cache: DOFCache, dataType: BrotliDataType = 'generic', quality: number = 11): DOFCache {
+  return new DOFCache(new DOFConvertibleCacheBackend(cache.backend, new BrotliCacheConverter(dataType, quality)));
 }
 
-export class FileSystemCache implements ICache {
+export class FileSystemCacheBackend implements DOFCacheBackend {
   constructor(readonly rootDir: string) {
   }
 
@@ -108,11 +133,10 @@ export class FileSystemCache implements ICache {
     return path.join(this.rootDir, ...key.split('/'));
   }
 
-  async get(key: string, lazyGetter: CacheGetter): Promise<Buffer> {
+  async get(key: string): Promise<Buffer|undefined> {
     const keyPath = this.pathForKey(key);
     if (!fs.existsSync(keyPath)) {
-      const value = await lazyGetter(key);
-      await this.set(key, value);
+      return undefined;
     }
     return fs.readFileSync(keyPath);
   }
