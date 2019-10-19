@@ -2,7 +2,7 @@ import path from 'path';
 import puppeteer from 'puppeteer';
 import dotenv from 'dotenv';
 
-import { FileSystemCache, Cache, asTextCache, asJSONCache } from './lib/cache';
+import { FileSystemCache, Cache, asTextCache, asJSONCache, asBrotliCache } from './lib/cache';
 import { BBL } from './lib/bbl';
 import { searchForBBL, gotoSidebarLink, SidebarLinkName, parseNOPVLinks, NOPVLink, SOALink, parseSOALinks } from './lib/dof';
 import { getPageHTML } from './lib/page-util';
@@ -49,8 +49,8 @@ class PageGetter {
   }
 
   async cachedGetPageHTML(bbl: BBL, linkName: SidebarLinkName, cache: Cache, cacheSubkey: string): Promise<string> {
-    return asTextCache(cache, CACHE_HTML_ENCODING).get(
-      `html/${bbl}_${cacheSubkey}.html`,
+    return asTextCache(asBrotliCache(cache, 'text'), CACHE_HTML_ENCODING).get(
+      `html/${bbl}_${cacheSubkey}.html.br`,
       () => this.getPage(bbl, linkName)
     );
   }
