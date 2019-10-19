@@ -1,8 +1,8 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, S3 } from "@aws-sdk/client-s3-node";
+import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3-node";
 import { Cache, CacheGetter } from "./cache";
 import { collectStream } from "./download";
 
-class S3Cache implements Cache<Buffer> {
+export class S3Cache implements Cache<Buffer> {
   constructor(readonly client: S3Client, readonly bucket: string) {
   }
 
@@ -21,6 +21,13 @@ class S3Cache implements Cache<Buffer> {
   }
 
   async set(key: string, value: Buffer): Promise<void> {
-    throw new Error("TODO IMPLEMENT THIS");
+    const putObjectCmd = new PutObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      ACL: "public-read",
+      Body: value,
+      ContentLength: value.length,
+    });
+    await this.client.send(putObjectCmd);
   }
 }
