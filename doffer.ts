@@ -49,13 +49,13 @@ class PageGetter {
 
   async cachedGetPageHTML(bbl: BBL, linkName: SidebarLinkName, cache: Cache, cacheSubkey: string): Promise<string> {
     return asTextCache(asBrotliCache(cache, 'text'), CACHE_HTML_ENCODING).get(
-      `html/${bbl}_${cacheSubkey}.html.br`,
+      `html/${bbl.asPath()}/${cacheSubkey}.html.br`,
       () => this.getPage(bbl, linkName)
     );
   }
 
   async cachedDownloadPDF(bbl: BBL, url: string, name: string, cache: Cache, cacheSubkey: string): Promise<Buffer> {
-    return cache.get(`pdf/${bbl}_${cacheSubkey}.pdf`, () => {
+    return cache.get(`pdf/${bbl.asPath()}/${cacheSubkey}.pdf`, () => {
       this.log(`Downloading ${name} PDF...`);
       return download(url);
     });
@@ -63,7 +63,7 @@ class PageGetter {
 
   async cachedDownloadAndConvertPDFToText(bbl: BBL, url: string, name: string, cache: Cache, cacheSubkey: string, extraFlags?: PDFToTextFlags[]): Promise<string> {
     const pdfToTextKey = `pdftotext-${EXPECTED_PDFTOTEXT_VERSION}` + (extraFlags || []).join('');
-    return asTextCache(cache, CACHE_TEXT_ENCODING).get(`txt/${bbl}_${cacheSubkey}_${pdfToTextKey}.txt`, async () => {
+    return asTextCache(cache, CACHE_TEXT_ENCODING).get(`txt/${bbl.asPath()}/${cacheSubkey}_${pdfToTextKey}.txt`, async () => {
       const pdfData = await this.cachedDownloadPDF(bbl, url, name, cache, cacheSubkey);
       this.log(`Converting ${name} PDF to text...`);
       return convertPDFToText(pdfData, extraFlags);
