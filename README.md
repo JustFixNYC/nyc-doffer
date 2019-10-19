@@ -1,3 +1,5 @@
+[![Actions Status](https://github.com/JustFixNYC/nyc-doffer/workflows/Node%20CI/badge.svg)](https://github.com/JustFixNYC/nyc-doffer/actions)
+
 This is a tool that scrapes the NYC Department of Finance (DOF) website
 for financial statements and provides the following data:
 
@@ -67,6 +69,10 @@ yarn test
 ```
 
 You can also run tests in watch mode. To do this, use `yarn test:watch`.
+
+Note that tests run the project's compiled JS; they don't automatically convert
+the TS to JS. This means that you will need to run `yarn build` before running
+`yarn test`, and `yarn watch` concurrently with `yarn test:watch`.
 
 ## Running integration tests with the DOF website
 

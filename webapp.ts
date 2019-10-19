@@ -2,7 +2,7 @@ import path from 'path';
 import http from 'http';
 import express from 'express';
 import ws from 'ws';
-import { mainWithSearchText, GracefulError, CACHE_DIR, getPropertyInfoForAddress, PropertyInfo } from './doffer';
+import { GracefulError, CACHE_DIR, getPropertyInfoForAddress, PropertyInfo } from './doffer';
 import { FileSystemCache, Cache } from './lib/cache';
 
 export type DofferWebSocketClientMessage = {

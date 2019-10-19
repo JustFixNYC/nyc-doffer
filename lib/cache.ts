@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import zlib from 'zlib';
 
 export type CacheGetter<T = Buffer> = (key: string) => Promise<T>;
 
@@ -61,6 +62,37 @@ export class JSONCacheConverter<T> implements CacheConverter<T> {
 
 export function asJSONCache<T>(cache: Cache, encoding?: BufferEncoding): Cache<T> {
   return new ConvertibleCache(cache, new JSONCacheConverter<T>(encoding));
+}
+
+export type BrotliDataType = 'text'|'generic';
+
+function brotliModeForDataType(type: BrotliDataType): number {
+  switch (type) {
+    case 'text': return zlib.constants.BROTLI_MODE_TEXT;
+    case 'generic': return zlib.constants.BROTLI_MODE_GENERIC;
+  }
+}
+
+export class BrotliCacheConverter implements CacheConverter<Buffer> {
+  constructor(readonly dataType: BrotliDataType, readonly quality: number) {
+  }
+
+  fromBuffer(value: Buffer): Buffer {
+    return zlib.brotliDecompressSync(value);
+  }
+
+  toBuffer(value: Buffer): Buffer {
+    return zlib.brotliCompressSync(value, {
+      params: {
+        [zlib.constants.BROTLI_PARAM_MODE]: brotliModeForDataType(this.dataType),
+        [zlib.constants.BROTLI_PARAM_QUALITY]: this.quality,
+      }
+    });
+  }
+}
+
+export function asBrotliCache(cache: Cache, dataType: BrotliDataType = 'generic', quality: number = 11): Cache {
+  return new ConvertibleCache(cache, new BrotliCacheConverter(dataType, quality));
 }
 
 export class FileSystemCache implements Cache {

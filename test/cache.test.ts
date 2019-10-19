@@ -1,7 +1,25 @@
 import fs from 'fs';
 import path from 'path';
 import { expect } from 'chai';
-import { FileSystemCache, CacheGetter } from '../lib/cache';
+import { FileSystemCache, CacheGetter, asBrotliCache, Cache } from '../lib/cache';
+
+class MemoryCache implements Cache {
+  constructor(readonly contents: Map<string, Buffer> = new Map()) {
+  }
+
+  async get(key: string, lazyGetter: CacheGetter): Promise<Buffer> {
+    let value = this.contents.get(key);
+    if (value === undefined) {
+      value = await lazyGetter(key);
+      this.contents.set(key, value);
+    }
+    return value;
+  }
+
+  async set(key: string, value: Buffer): Promise<void> {
+    this.contents.set(key, value);
+  }
+}
 
 // https://gist.github.com/tkihira/2367067
 var recursiveRmdirSync = function(dir: string) {
@@ -42,5 +60,15 @@ describe('FileSystemCache', () => {
     } finally {
       recursiveRmdirSync(tempDir);
     }
+  });
+});
+
+describe("BrotliCache", () => {
+  it('works', async () => {
+    const cache = asBrotliCache(new MemoryCache(), 'text');
+    const buf = Buffer.from('halloo\u2026', 'utf8');
+    await cache.set('boop', buf);
+    const outBuf = await cache.get('boop', neverCall);
+    expect(outBuf.toString('utf8')).to.equal('halloo\u2026');
   });
 });
