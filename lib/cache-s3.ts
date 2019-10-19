@@ -10,13 +10,13 @@ export class S3CacheBackend implements DOFCacheBackend<Buffer> {
   }
 
   urlForKey(key: string): string {
-    return `https://${this.bucket}.s3.amazonaws.com/${key}`;
+    return `https://${this.bucket}.s3.amazonaws.com/${getFinalS3Key(key)}`;
   }
 
   async delete(key: string): Promise<void> {
     const deleteObjectCmd = new DeleteObjectCommand({
       Bucket: this.bucket,
-      Key: key
+      Key: getFinalS3Key(key)
     });
     await this.client.send(deleteObjectCmd);
   }
@@ -24,7 +24,7 @@ export class S3CacheBackend implements DOFCacheBackend<Buffer> {
   async get(key: string): Promise<Buffer|undefined> {
     const getObjectCmd = new GetObjectCommand({
       Bucket: this.bucket,
-      Key: key
+      Key: getFinalS3Key(key)
     });
     const result = await this.client.send(getObjectCmd);
     if (result.Body) {
@@ -45,8 +45,21 @@ export class S3CacheBackend implements DOFCacheBackend<Buffer> {
   }
 }
 
+export function getFinalS3Key(key: string): string {
+  const finalExt = posix.extname(key);
+
+  if (finalExt === '.br') {
+    let basename = posix.basename(key, finalExt);
+    const penultimateExt = posix.extname(basename);
+    basename = posix.basename(basename, penultimateExt);
+    return `${basename}${finalExt}${penultimateExt}`;
+  }
+
+  return key;
+}
+
 export function getS3PutObjectInputForKey(key: string): Omit<PutObjectInput, 'Bucket'> {
-  const input: Omit<PutObjectInput, 'Bucket'> = {Key: key};
+  const input: Omit<PutObjectInput, 'Bucket'> = {Key: getFinalS3Key(key)};
   const finalExt = posix.extname(key);
   let currKey = key;
 
