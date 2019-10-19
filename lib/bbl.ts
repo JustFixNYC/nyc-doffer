@@ -6,14 +6,18 @@ export enum Borough {
   STATEN_ISLAND = 5
 }
 
+const BLOCK_MAX_DIGITS = 5;
+
+const LOT_MAX_DIGITS = 4;
+
 export class BBL {
   constructor(readonly borough: Borough, readonly block: number, readonly lot: number) {
   }
 
   toString(): string {
     const borough = this.borough.toString();
-    const block = this.block.toString().padStart(5, '0');
-    const lot = this.lot.toString().padStart(4, '0');
+    const block = this.block.toString().padStart(BLOCK_MAX_DIGITS, '0');
+    const lot = this.lot.toString().padStart(LOT_MAX_DIGITS, '0');
     return `${borough}${block}${lot}`;
   }
 
