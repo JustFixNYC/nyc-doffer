@@ -1,5 +1,3 @@
-import puppeteer from 'puppeteer';
-
 import { BBL, Borough } from "./lib/bbl";
 import { searchForBBL, gotoSidebarLink, SidebarLinkName } from './lib/dof';
 import { launchBrowser } from './lib/browser';

@@ -7,7 +7,6 @@ import { BBL } from './lib/bbl';
 import { searchForBBL, gotoSidebarLink, SidebarLinkName, parseNOPVLinks, NOPVLink, SOALink, parseSOALinks } from './lib/dof';
 import { getPageHTML } from './lib/page-util';
 import { download } from './lib/download';
-import { getISODate } from './lib/util';
 import { convertPDFToText, PDFToTextFlags, EXPECTED_PDFTOTEXT_VERSION } from './lib/pdf-to-text';
 import { extractNetOperatingIncome } from './lib/extract-noi';
 import { getFirstGeoSearchResult, GeoSearchProperties } from './lib/geosearch';
