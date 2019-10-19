@@ -3,6 +3,8 @@ import path from 'path';
 import zlib from 'zlib';
 import { pathToFileURL } from 'url';
 
+export const DOF_CACHE_TEXT_ENCODING: BufferEncoding = 'utf8';
+
 export type DOFCacheGetter<T = Buffer> = (key: string) => Promise<T>;
 
 export class DOFCache<T = Buffer> {
@@ -69,37 +71,37 @@ export class DOFConvertibleCacheBackend<T> implements DOFCacheBackend<T> {
 }
 
 export class TextCacheConverter implements DOFCacheConverter<string> {
-  constructor(readonly encoding?: BufferEncoding) {
+  constructor() {
   }
 
   fromBuffer(value: Buffer): string {
-    return value.toString(this.encoding);
+    return value.toString(DOF_CACHE_TEXT_ENCODING);
   }
 
   toBuffer(value: string): Buffer {
-    return Buffer.from(value, this.encoding);
+    return Buffer.from(value, DOF_CACHE_TEXT_ENCODING);
   }
 }
 
-export function asTextCache(cache: DOFCache, encoding?: BufferEncoding): DOFCache<string> {
-  return new DOFCache(new DOFConvertibleCacheBackend(cache.backend, new TextCacheConverter(encoding)));
+export function asTextCache(cache: DOFCache): DOFCache<string> {
+  return new DOFCache(new DOFConvertibleCacheBackend(cache.backend, new TextCacheConverter()));
 }
 
 export class JSONCacheConverter<T> implements DOFCacheConverter<T> {
-  constructor(readonly encoding?: BufferEncoding) {
+  constructor() {
   }
 
   fromBuffer(value: Buffer): T {
-    return JSON.parse(value.toString(this.encoding));
+    return JSON.parse(value.toString(DOF_CACHE_TEXT_ENCODING));
   }
 
   toBuffer(value: T): Buffer {
-    return Buffer.from(JSON.stringify(value, null, 2), this.encoding);
+    return Buffer.from(JSON.stringify(value, null, 2), DOF_CACHE_TEXT_ENCODING);
   }
 }
 
 export function asJSONCache<T>(cache: DOFCache, encoding?: BufferEncoding): DOFCache<T> {
-  return new DOFCache(new DOFConvertibleCacheBackend(cache.backend, new JSONCacheConverter<T>(encoding)));
+  return new DOFCache(new DOFConvertibleCacheBackend(cache.backend, new JSONCacheConverter<T>()));
 }
 
 export type BrotliDataType = 'text'|'generic';

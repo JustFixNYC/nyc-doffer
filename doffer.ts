@@ -18,10 +18,6 @@ dotenv.config();
 
 export const CACHE_DIR = path.join(__dirname, '.dof-cache');
 
-const CACHE_HTML_ENCODING = 'utf-8';
-
-const CACHE_TEXT_ENCODING = 'utf-8';
-
 class PageGetter {
   private browser: puppeteer.Browser|null = null;
   private page: puppeteer.Page|null = null;
@@ -48,7 +44,7 @@ class PageGetter {
   }
 
   async cachedGetPageHTML(bbl: BBL, linkName: SidebarLinkName, cache: DOFCache, cacheSubkey: string): Promise<string> {
-    return asTextCache(asBrotliCache(cache, 'text'), CACHE_HTML_ENCODING).lazyGet(
+    return asTextCache(asBrotliCache(cache, 'text')).lazyGet(
       `html/${bbl.asPath()}/${cacheSubkey}.html.br`,
       () => this.getPage(bbl, linkName)
     );
@@ -63,7 +59,7 @@ class PageGetter {
 
   async cachedDownloadAndConvertPDFToText(bbl: BBL, url: string, name: string, cache: DOFCache, cacheSubkey: string, extraFlags?: PDFToTextFlags[]): Promise<string> {
     const pdfToTextKey = `pdftotext-${EXPECTED_PDFTOTEXT_VERSION}` + (extraFlags || []).join('');
-    return asTextCache(cache, CACHE_TEXT_ENCODING).lazyGet(`txt/${bbl.asPath()}/${cacheSubkey}_${pdfToTextKey}.txt`, async () => {
+    return asTextCache(cache).lazyGet(`txt/${bbl.asPath()}/${cacheSubkey}_${pdfToTextKey}.txt`, async () => {
       const pdfData = await this.cachedDownloadPDF(bbl, url, name, cache, cacheSubkey);
       this.log(`Converting ${name} PDF to text...`);
       return convertPDFToText(pdfData, extraFlags);
