@@ -21,15 +21,18 @@
     "mocha": "^6.2.0"
   },
   "dependencies": {
+    "@aws-sdk/client-s3-node": "^0.1.0-preview.2",
     "@types/cheerio": "^0.22.13",
     "@types/dotenv": "^6.1.1",
     "@types/express": "^4.17.1",
+    "@types/mime": "^2.0.1",
     "@types/puppeteer": "^1.19.1",
     "@types/tmp": "^0.1.0",
     "@types/ws": "^6.0.3",
     "cheerio": "^1.0.0-rc.3",
     "dotenv": "^8.1.0",
     "express": "^4.17.1",
+    "mime": "^2.4.4",
     "parcel-bundler": "^1.12.3",
     "preact": "^8.5.2",
     "puppeteer": "^1.20.0",

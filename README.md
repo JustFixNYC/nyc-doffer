@@ -20,6 +20,13 @@ and installing one of the following:
 * [Xpdf command line tools (Windows)](https://xpdfreader-dl.s3.amazonaws.com/xpdf-tools-win-4.02.zip)
 * [Xpdf command line tools (OS X)](https://xpdfreader-dl.s3.amazonaws.com/xpdf-tools-mac-4.02.tar.gz)
 
+You may want to create an `.env` file to configure environment variables. This
+can be done by copying the sample file and editing it as needed:
+
+```
+cp .env.sample .env
+```
+
 To install and build the app:
 
 ```
@@ -35,6 +42,10 @@ You can run the tool by passing it an address to search for, e.g.:
 ```
 node doffer.js "654 park place, brooklyn"
 ```
+
+## Environment variables
+
+See the [`.env.sample`](.env.sample) file for documentation on environment variables.
 
 ## Running the web server
 
@@ -80,4 +91,12 @@ To run tests against the DOF website to make sure scraping works, run:
 
 ```
 node test-dof-site.js
+```
+
+## Running integration tests with AWS S3
+
+To run tests against S3 to make sure it works, run:
+
+```
+node test-s3-cache.js
 ```
