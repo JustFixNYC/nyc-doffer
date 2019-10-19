@@ -19,6 +19,10 @@ class MemoryCache implements ICache {
   async set(key: string, value: Buffer): Promise<void> {
     this.contents.set(key, value);
   }
+
+  async delete(key: string): Promise<void> {
+    this.contents.delete(key);
+  }
 }
 
 // https://gist.github.com/tkihira/2367067

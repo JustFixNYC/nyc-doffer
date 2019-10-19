@@ -7,6 +7,7 @@ export type CacheGetter<T = Buffer> = (key: string) => Promise<T>;
 export interface ICache<T = Buffer> {
   get(key: string, lazyGetter: CacheGetter<T>): Promise<T>;
   set(key: string, value: T): Promise<void>;
+  delete(key: string): Promise<void>;
 }
 
 export interface ICacheConverter<T> {
@@ -27,6 +28,10 @@ export class ConvertibleCache<T> implements ICache<T> {
 
   async set(key: string, value: T): Promise<void> {
     return this.cache.set(key, this.converter.toBuffer(value));
+  }
+
+  async delete(key: string): Promise<void> {
+    return this.cache.delete(key);
   }
 }
 
@@ -119,5 +124,12 @@ export class FileSystemCache implements ICache {
       fs.mkdirSync(dirname, {recursive: true});
     }
     fs.writeFileSync(keyPath, value);
+  }
+
+  async delete(key: string): Promise<void> {
+    const keyPath = this.pathForKey(key);
+    if (fs.existsSync(keyPath) && !fs.statSync(keyPath).isDirectory) {
+      fs.unlinkSync(keyPath);
+    }
   }
 }
