@@ -1,6 +1,8 @@
-import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3-node";
+import assert from 'assert';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand, PutObjectInput } from "@aws-sdk/client-s3-node";
 import mime from 'mime';
-import { DOFCacheBackend } from "./cache";
+import { posix } from 'path';
+import { DOFCacheBackend, DOF_CACHE_TEXT_ENCODING } from "./cache";
 import { collectStream } from "./download";
 
 export class S3CacheBackend implements DOFCacheBackend<Buffer> {
@@ -34,12 +36,37 @@ export class S3CacheBackend implements DOFCacheBackend<Buffer> {
   async set(key: string, value: Buffer): Promise<void> {
     const putObjectCmd = new PutObjectCommand({
       Bucket: this.bucket,
-      Key: key,
       ACL: "public-read",
       Body: value,
       ContentLength: value.length,
-      ContentType: mime.getType(key) || undefined,
+      ...getS3PutObjectInputForKey(key),
     });
     await this.client.send(putObjectCmd);
   }
+}
+
+export function getS3PutObjectInputForKey(key: string): Omit<PutObjectInput, 'Bucket'> {
+  const input: Omit<PutObjectInput, 'Bucket'> = {Key: key};
+  const finalExt = posix.extname(key);
+  let currKey = key;
+
+  if (finalExt === '.br') {
+    input.ContentEncoding = 'br';
+    currKey = posix.basename(key, finalExt);
+  }
+
+  let contentType = mime.getType(currKey);
+
+  if (contentType === null) {
+    throw new Error(`Unable to determine content type for ${key}!`);
+  }
+
+  if (contentType.startsWith('text/')) {
+    assert.equal(DOF_CACHE_TEXT_ENCODING, 'utf8');
+    contentType = `${contentType}; charset=utf-8`;
+  }
+
+  input.ContentType = contentType;
+
+  return input;
 }
