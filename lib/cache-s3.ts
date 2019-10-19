@@ -1,10 +1,18 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3-node";
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3-node";
 import mime from 'mime';
 import { Cache, CacheGetter } from "./cache";
 import { collectStream } from "./download";
 
 export class S3Cache implements Cache<Buffer> {
   constructor(readonly client: S3Client, readonly bucket: string) {
+  }
+
+  async delete(key: string): Promise<void> {
+    const deleteObjectCmd = new DeleteObjectCommand({
+      Bucket: this.bucket,
+      Key: key
+    });
+    await this.client.send(deleteObjectCmd);
   }
 
   async get(key: string, lazyGetter: CacheGetter<Buffer>): Promise<Buffer> {
