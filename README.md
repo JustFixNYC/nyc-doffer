@@ -70,6 +70,10 @@ yarn test
 
 You can also run tests in watch mode. To do this, use `yarn test:watch`.
 
+Note that tests run the project's compiled JS; they don't automatically convert
+the TS to JS. This means that you will need to run `yarn build` before running
+`yarn test`, and `yarn watch` concurrently with `yarn test:watch`.
+
 ## Running integration tests with the DOF website
 
 To run tests against the DOF website to make sure scraping works, run:
