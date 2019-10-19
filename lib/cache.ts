@@ -47,8 +47,8 @@ export interface DOFCacheBackend<T = Buffer> {
 }
 
 export interface DOFCacheConverter<T> {
-  fromBuffer(value: Buffer): T;
-  toBuffer(value: T): Buffer;
+  decode(value: Buffer): T;
+  encode(value: T): Buffer;
 }
 
 export class DOFConvertibleCacheBackend<T> implements DOFCacheBackend<T> {
@@ -58,11 +58,11 @@ export class DOFConvertibleCacheBackend<T> implements DOFCacheBackend<T> {
   async get(key: string): Promise<T|undefined> {
     const buf = await this.backend.get(key);
     if (!buf) return undefined;
-    return this.converter.fromBuffer(buf);
+    return this.converter.decode(buf);
   }
 
   async set(key: string, value: T): Promise<void> {
-    return this.backend.set(key, this.converter.toBuffer(value));
+    return this.backend.set(key, this.converter.encode(value));
   }
 
   async delete(key: string): Promise<void> {
@@ -74,11 +74,11 @@ export class TextCacheConverter implements DOFCacheConverter<string> {
   constructor() {
   }
 
-  fromBuffer(value: Buffer): string {
+  decode(value: Buffer): string {
     return value.toString(DOF_CACHE_TEXT_ENCODING);
   }
 
-  toBuffer(value: string): Buffer {
+  encode(value: string): Buffer {
     return Buffer.from(value, DOF_CACHE_TEXT_ENCODING);
   }
 }
@@ -91,11 +91,11 @@ export class JSONCacheConverter<T> implements DOFCacheConverter<T> {
   constructor() {
   }
 
-  fromBuffer(value: Buffer): T {
+  decode(value: Buffer): T {
     return JSON.parse(value.toString(DOF_CACHE_TEXT_ENCODING));
   }
 
-  toBuffer(value: T): Buffer {
+  encode(value: T): Buffer {
     return Buffer.from(JSON.stringify(value, null, 2), DOF_CACHE_TEXT_ENCODING);
   }
 }
@@ -117,11 +117,11 @@ export class BrotliCacheConverter implements DOFCacheConverter<Buffer> {
   constructor(readonly dataType: BrotliDataType, readonly quality: number) {
   }
 
-  fromBuffer(value: Buffer): Buffer {
+  decode(value: Buffer): Buffer {
     return zlib.brotliDecompressSync(value);
   }
 
-  toBuffer(value: Buffer): Buffer {
+  encode(value: Buffer): Buffer {
     return zlib.brotliCompressSync(value, {
       params: {
         [zlib.constants.BROTLI_PARAM_MODE]: brotliModeForDataType(this.dataType),
