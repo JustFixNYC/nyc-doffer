@@ -1,11 +1,18 @@
 import fs from 'fs';
 import path from 'path';
 import zlib from 'zlib';
+import { pathToFileURL } from 'url';
 
 export type DOFCacheGetter<T = Buffer> = (key: string) => Promise<T>;
 
 export class DOFCache<T = Buffer> {
   constructor(readonly backend: DOFCacheBackend<T>) {
+  }
+
+  urlForKey(key: string): string|undefined {
+    if (this.backend.urlForKey) {
+      return this.backend.urlForKey(key);
+    }
   }
 
   async lazyGet(key: string, lazyGetter: DOFCacheGetter<T>): Promise<T> {
@@ -31,6 +38,7 @@ export class DOFCache<T = Buffer> {
 }
 
 export interface DOFCacheBackend<T = Buffer> {
+  urlForKey?: (key: string) => string;
   get(key: string): Promise<T|undefined>;
   set(key: string, value: T): Promise<void>;
   delete(key: string): Promise<void>;
@@ -131,6 +139,10 @@ export class FileSystemCacheBackend implements DOFCacheBackend {
 
   private pathForKey(key: string): string {
     return path.join(this.rootDir, ...key.split('/'));
+  }
+
+  urlForKey(key: string): string {
+    return pathToFileURL(this.pathForKey(key)).toString();
   }
 
   async get(key: string): Promise<Buffer|undefined> {

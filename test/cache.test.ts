@@ -60,6 +60,11 @@ describe('FileSystemCache', () => {
       recursiveRmdirSync(tempDir);
     }
   });
+
+  it('generates file URLs', () => {
+    const backend = new FileSystemCacheBackend('blah');
+    expect(backend.urlForKey('boop')).to.match(/^file:\/\/\/.*blah\/boop$/);
+  });
 });
 
 describe("BrotliCache", () => {
