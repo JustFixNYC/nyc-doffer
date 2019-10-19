@@ -8,6 +8,12 @@ describe("BBL", () => {
     expect(bbl.toString()).to.equal('1013730001');
   });
 
+  it("converts to padded path", () => {
+    const bbl = new BBL(Borough.MANHATTAN, 1373, 1);
+
+    expect(bbl.asPath()).to.equal('1/01373/0001');
+  });
+
   it("converts from padded representation", () => {
     const bbl = BBL.from('1013730001');
     expect(bbl.borough).to.eql(Borough.MANHATTAN);

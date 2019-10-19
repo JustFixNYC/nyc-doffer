@@ -14,11 +14,19 @@ export class BBL {
   constructor(readonly borough: Borough, readonly block: number, readonly lot: number) {
   }
 
-  toString(): string {
+  private zeroPaddedParts(): [string, string, string] {
     const borough = this.borough.toString();
     const block = this.block.toString().padStart(BLOCK_MAX_DIGITS, '0');
     const lot = this.lot.toString().padStart(LOT_MAX_DIGITS, '0');
-    return `${borough}${block}${lot}`;
+    return [borough, block, lot];
+  }
+
+  asPath(): string {
+    return this.zeroPaddedParts().join('/');
+  }
+
+  toString(): string {
+    return this.zeroPaddedParts().join('');
   }
 
   static from(bbl: string): BBL {
