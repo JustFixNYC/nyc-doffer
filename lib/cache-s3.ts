@@ -1,4 +1,5 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3-node";
+import mime from 'mime';
 import { Cache, CacheGetter } from "./cache";
 import { collectStream } from "./download";
 
@@ -27,6 +28,7 @@ export class S3Cache implements Cache<Buffer> {
       ACL: "public-read",
       Body: value,
       ContentLength: value.length,
+      ContentType: mime.getType(key) || undefined,
     });
     await this.client.send(putObjectCmd);
   }
