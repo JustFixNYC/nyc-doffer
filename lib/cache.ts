@@ -38,10 +38,15 @@ export class DOFCache<T = Buffer> {
   delete(key: string): Promise<void> {
     return this.backend.delete(key);
   }
+
+  get description(): string {
+    return this.backend.description;
+  }
 }
 
 export interface DOFCacheBackend<T = Buffer> {
   urlForKey?: (key: string) => string;
+  description: string;
   get(key: string): Promise<T|undefined>;
   set(key: string, value: T): Promise<void>;
   delete(key: string): Promise<void>;
@@ -54,7 +59,13 @@ export interface DOFCacheConverter<T> {
 }
 
 export class DOFConvertibleCacheBackend<T> implements DOFCacheBackend<T> {
+  urlForKey?: (key: string) => string;
+
   constructor(readonly backend: DOFCacheBackend, readonly converter: DOFCacheConverter<T>) {
+    const {urlForKey} = backend;
+    if (urlForKey) {
+      this.urlForKey = (key) => urlForKey.call(backend, this.transformKey(key));
+    }
   }
 
   private transformKey(key: string): string {
@@ -63,6 +74,10 @@ export class DOFConvertibleCacheBackend<T> implements DOFCacheBackend<T> {
       return `${key}${extension}`;
     }
     return key;
+  }
+
+  get description(): string {
+    return `${this.converter.constructor.name}(${this.backend.description})`;
   }
 
   async get(key: string): Promise<T|undefined> {
@@ -164,6 +179,10 @@ export class FileSystemCacheBackend implements DOFCacheBackend {
 
   urlForKey(key: string): string {
     return pathToFileURL(this.pathForKey(key)).toString();
+  }
+
+  get description(): string {
+    return `${this.constructor.name}(rootDir=${this.rootDir})`;
   }
 
   async get(key: string): Promise<Buffer|undefined> {

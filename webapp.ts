@@ -2,8 +2,8 @@ import path from 'path';
 import http from 'http';
 import express from 'express';
 import ws from 'ws';
-import { GracefulError, CACHE_DIR, getPropertyInfoForAddress, PropertyInfo } from './doffer';
-import { FileSystemCacheBackend, DOFCache } from './lib/cache';
+import { GracefulError, getPropertyInfoForAddress, PropertyInfo, getCacheFromEnvironment } from './doffer';
+import { DOFCache } from './lib/cache';
 
 export type DofferWebSocketClientMessage = {
   event: 'startJob',
@@ -96,7 +96,7 @@ const server = http.createServer(app);
 
 const wss = new ws.Server({ server });
 
-const cache = new DOFCache(new FileSystemCacheBackend(CACHE_DIR));
+const cache = getCacheFromEnvironment();
 
 function sendMessageToClient(ws: ws, message: DofferWebSocketServerMessage) {
   ws.send(JSON.stringify(message));

@@ -13,6 +13,10 @@ export class S3CacheBackend implements DOFCacheBackend<Buffer> {
     return `https://${this.bucket}.s3.amazonaws.com/${getFinalS3Key(key)}`;
   }
 
+  get description(): string {
+    return `${this.constructor.name}(bucket=${this.bucket})`;
+  }
+
   async delete(key: string): Promise<void> {
     const deleteObjectCmd = new DeleteObjectCommand({
       Bucket: this.bucket,

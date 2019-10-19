@@ -2,7 +2,7 @@ import path from 'path';
 import puppeteer from 'puppeteer';
 import dotenv from 'dotenv';
 
-import { FileSystemCacheBackend, asTextCache, asJSONCache, asBrotliCache, DOFCache } from './lib/cache';
+import { FileSystemCacheBackend, asTextCache, asJSONCache, asBrotliCache, DOFCache, DOFCacheBackend } from './lib/cache';
 import { BBL } from './lib/bbl';
 import { searchForBBL, gotoSidebarLink, SidebarLinkName, parseNOPVLinks, NOPVLink, SOALink, parseSOALinks } from './lib/dof';
 import { getPageHTML } from './lib/page-util';
@@ -13,10 +13,32 @@ import { getFirstGeoSearchResult, GeoSearchProperties } from './lib/geosearch';
 import { extractRentStabilizedUnits } from './lib/extract-rentstab-units';
 import { launchBrowser } from './lib/browser';
 import { Log, defaultLog } from './lib/log';
+import { S3CacheBackend } from './lib/cache-s3';
+import { S3Client } from '@aws-sdk/client-s3-node';
 
 dotenv.config();
 
 export const CACHE_DIR = path.join(__dirname, '.dof-cache');
+export const S3_BUCKET = process.env.S3_BUCKET || '';
+export const DISABLE_BROTLI = !!process.env.DISABLE_BROTLI;
+
+export function getCacheFromEnvironment(): DOFCache {
+  let cacheBackend: DOFCacheBackend;
+
+  if (S3_BUCKET) {
+    cacheBackend = new S3CacheBackend(new S3Client({}), S3_BUCKET);
+  } else {
+    cacheBackend = new FileSystemCacheBackend(CACHE_DIR);
+  }
+
+  let cache = new DOFCache(cacheBackend);
+
+  if (!DISABLE_BROTLI) {
+    cache = asBrotliCache(cache);
+  }
+
+  return cache;
+}
 
 class PageGetter {
   private browser: puppeteer.Browser|null = null;
@@ -44,7 +66,7 @@ class PageGetter {
   }
 
   async cachedGetPageHTML(bbl: BBL, linkName: SidebarLinkName, cache: DOFCache, cacheSubkey: string): Promise<string> {
-    return asTextCache(asBrotliCache(cache)).lazyGet(
+    return asTextCache(cache).lazyGet(
       `html/${bbl.asPath()}/${cacheSubkey}.html`,
       () => this.getPage(bbl, linkName)
     );
@@ -174,7 +196,7 @@ export async function getPropertyInfoForAddress(address: string, cache: DOFCache
 }
 
 export async function mainWithSearchText(searchText: string, log: Log = defaultLog) {
-  const cache = new DOFCache(new FileSystemCacheBackend(CACHE_DIR));
+  const cache = getCacheFromEnvironment();
   const {nopv, soa} = await getPropertyInfoForAddress(searchText, cache, log);
   for (let {period, noi} of nopv) {
     if (noi) {

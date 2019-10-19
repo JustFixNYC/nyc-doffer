@@ -4,7 +4,10 @@ import { expect } from 'chai';
 import { FileSystemCacheBackend, DOFCacheGetter, asBrotliCache, DOFCacheBackend, DOFCache, getBrotliDataType } from '../lib/cache';
 
 class MemoryCacheBackend implements DOFCacheBackend {
+  description: string;
+
   constructor(readonly contents: Map<string, Buffer> = new Map()) {
+    this.description = this.constructor.name;
   }
 
   async get(key: string): Promise<Buffer|undefined> {

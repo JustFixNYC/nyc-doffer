@@ -1,9 +1,7 @@
 import readline from 'readline';
 import dotenv from 'dotenv';
 import { expect } from 'chai';
-import { S3CacheBackend } from './lib/cache-s3';
-import { S3Client } from '@aws-sdk/client-s3-node';
-import { DOFCache } from './lib/cache';
+import { getCacheFromEnvironment } from './doffer';
 
 dotenv.config();
 
@@ -20,31 +18,26 @@ async function question(prompt: string): Promise<string> {
   });
 }
 
-function getRequiredEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`Please define ${name} in your environment or .env file.`);
-  }
-  return value;
-}
-
 async function main() {
-  const bucket = getRequiredEnv('S3_BUCKET');
-  const backend = new S3CacheBackend(new S3Client({}), bucket);
-  const cache = new DOFCache(backend);
-  const key = `s3-cache-test-${Date.now()}.txt`;
+  const cache = getCacheFromEnvironment();
+  const key = `cache-test-${Date.now()}.txt`;
   const content = `here are some test contents ${key}\u2026`;
   const buf = Buffer.from(content, 'utf8');
 
+  console.log(`Using cache ${cache.description}.`);
   console.log(`Creating ${key}...`);
   await cache.set(key, buf);
 
   try {
     console.log(`Retrieving ${key}...`);
-    const lazyGetter = () => Promise.reject(new Error(`${key} should already be in S3!`));
+    const lazyGetter = () => Promise.reject(new Error(`${key} should already be in the cache!`));
     const gotBuf = await cache.lazyGet(key, lazyGetter);
     expect(gotBuf.toString('utf8')).to.equal(content);
-    console.log(`Looks good! You can view the cached file at ${backend.urlForKey(key)}.`);
+    console.log(`Looks good!`);
+    const url = cache.urlForKey(key);
+    if (url) {
+      console.log(`You can view the cached file at ${url}.`);
+    }
     await question('Press enter to delete the cached file.');
   } finally {
     console.log(`Deleting ${key}...`);
