@@ -22,6 +22,6 @@ class DbSingleton {
   }
 }
 
-export const database = new DbSingleton('DATABASE_URL');
+export const databaseConnector = new DbSingleton('DATABASE_URL');
 
-export const nycdb = new DbSingleton('NYCDB_URL');
+export const nycdbConnector = new DbSingleton('NYCDB_URL');

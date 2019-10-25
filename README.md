@@ -104,6 +104,19 @@ Now you can test your connection with:
 node dbtool.js test_connection
 ```
 
+## NYCDB integration
+
+You can also optionally integrate with [NYCDB][] to figure out what BBLs to run
+batch jobs on.
+
+To do this, define the `NYCDB_URL` environment variable and test your connection with:
+
+```
+node dbtool.js test_nycdb_connection
+```
+
+[NYCDB]: https://github.com/nycdb/nycdb
+
 ## Running tests
 
 Run tests via:
