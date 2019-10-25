@@ -197,6 +197,9 @@ export async function getPropertyInfoForAddress(address: string, cache: DOFCache
 
 export async function mainWithSearchText(searchText: string, log: Log = defaultLog) {
   const cache = getCacheFromEnvironment();
+  console.log(`Using cache ${cache.description}.`);
+  const rtfl = new Intl.RelativeTimeFormat('en');
+  const start = Date.now();
   const {nopv, soa} = await getPropertyInfoForAddress(searchText, cache, log);
   for (let {period, noi} of nopv) {
     if (noi) {
@@ -210,7 +213,8 @@ export async function mainWithSearchText(searchText: string, log: Log = defaultL
     }
   }
 
-  log("Done.");
+  const relTime = rtfl.format((Date.now() - start) / 1000.0, 'second');
+  log(`Done ${relTime}.`);
 }
 
 /** The main CLI program. */
