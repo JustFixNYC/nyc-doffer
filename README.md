@@ -71,6 +71,39 @@ heroku container:push web && heroku container:release web
 
 You can also try using `node deploy-to-heroku.js`.
 
+## Database integration
+
+You can optionally integrate with a Postgres database to run
+batch jobs that scrape DOF records for swaths of the city.
+
+To do this, you will need to create a Postgres database and user
+by running `psql` as an administrative user, e.g.:
+
+```
+psql -U postgres
+```
+
+Then run:
+
+```
+create database doffer;
+create user doffer with encrypted password 'doffer';
+grant all privileges on database doffer to doffer;
+```
+
+You should now be able to access the database by setting the
+following environment variable:
+
+```
+DATABASE_URL=postgres://doffer:doffer@localhost/doffer
+```
+
+Now you can test your connection with:
+
+```
+node dbtool.js test_connection
+```
+
 ## Running tests
 
 Run tests via:
