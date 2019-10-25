@@ -1,6 +1,6 @@
 import dotenv from 'dotenv';
 import docopt from 'docopt';
-import { getDatabase } from './lib/db';
+import { database } from './lib/db';
 
 dotenv.config();
 
@@ -25,7 +25,7 @@ async function main() {
 }
 
 async function testConnection() {
-  const db = getDatabase();
+  const db = database.get();
 
   const tables = await db.any('SELECT * FROM pg_tables;');
 
