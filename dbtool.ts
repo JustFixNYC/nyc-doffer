@@ -1,5 +1,6 @@
 import dotenv from 'dotenv';
 import docopt from 'docopt';
+import ProgressBar from 'progress';
 import { databaseConnector, nycdbConnector } from './lib/db';
 
 dotenv.config();
@@ -10,12 +11,14 @@ const DOC = `
 Usage:
   dbtool.js test_connection
   dbtool.js test_nycdb_connection
+  dbtool.js build_bbl_table
   dbtool.js -h | --help
 `;
 
 type CommandOptions = {
   test_connection: boolean;
   test_nycdb_connection: boolean;
+  build_bbl_table: boolean;
 };
 
 async function main() {
@@ -25,6 +28,8 @@ async function main() {
     await testConnection();
   } else if (options.test_nycdb_connection) {
     await testNycdbConnection();
+  } else if (options.build_bbl_table) {
+    await buildBblTable();
   }
 }
 
@@ -37,6 +42,27 @@ async function testNycdbConnection() {
   console.log(`Your NYCDB connection seems to be working!`);
 
   await nycdb.$pool.end();
+}
+
+async function buildBblTable() {
+  // TODO: Create BBL table.
+  await exportNycdbBblsToTable('hpd_registrations');
+}
+
+async function exportNycdbBblsToTable(table: string, pageSize: number = 10_000) {
+  const nycdb = nycdbConnector.get();
+  const {count}: {count: number} = await nycdb.one(`SELECT COUNT(DISTINCT bbl) FROM ${table};`);
+
+  console.log(`Found ${Intl.NumberFormat().format(count)} unique BBLs in ${table} table.`);
+
+  const pages = Math.ceil(count / pageSize);
+  const bar = new ProgressBar(':bar :percent', { total: pages });
+  for (let i = 0; i < pages; i++) {
+    const bbls: { bbl: string }[] = await nycdb.many(
+      `SELECT DISTINCT bbl FROM ${table} ORDER BY bbl LIMIT ${pageSize} OFFSET ${i * pageSize};`);
+    bbls; // TODO: Replace this with inserting BBLs into table.
+    bar.tick();
+  }
 }
 
 async function testConnection() {
