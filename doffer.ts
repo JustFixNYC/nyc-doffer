@@ -114,6 +114,10 @@ async function cachedGeoSearch(text: string, cache: DOFCache, log: Log = default
   });
 }
 
+export type linkFilter = (link: {date: string}) => boolean;
+
+export const defaultLinkFilter: linkFilter = () => true;
+
 /** Information about a BBL's Notice of Property Value (NOPV) for a particular period. */
 type NOPVInfo = NOPVLink & {
   /** The BBL's Net Operating Income (NOI) for the period. */
@@ -121,12 +125,12 @@ type NOPVInfo = NOPVLink & {
 };
 
 /** Retrieves and extracts all information related to a BBL's Notices of Property Value. */
-async function getNOPVInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache): Promise<NOPVInfo[]>  {
+async function getNOPVInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache, filter: linkFilter = defaultLinkFilter): Promise<NOPVInfo[]>  {
   const results: NOPVInfo[] = [];
 
   const page = SidebarLinkName.noticesOfPropertyValue;
   const html = await pageGetter.cachedGetPageHTML(bbl, page, cache, 'nopv');
-  const links = parseNOPVLinks(html);
+  const links = parseNOPVLinks(html).filter(filter);
 
   for (let link of links) {
     const name = `${link.date} NOPV for BBL ${bbl}`;
@@ -150,12 +154,12 @@ export type PropertyInfo = {
   soa: SOAInfo[]
 };
 
-async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache): Promise<SOAInfo[]> {
+async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache, filter: linkFilter = defaultLinkFilter): Promise<SOAInfo[]> {
   const results: SOAInfo[] = [];
 
   const page = SidebarLinkName.propertyTaxBills;
   const html = await pageGetter.cachedGetPageHTML(bbl, page, cache, 'soa');
-  const links = parseSOALinks(html);
+  const links = parseSOALinks(html).filter(filter);
 
   for (let link of links) {
     if (link.quarter !== 1) continue;
@@ -170,9 +174,9 @@ async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache): Pr
   return results;
 }
 
-export async function getPropertyInfoForBBLWithPageGetter(bbl: BBL, cache: DOFCache, pageGetter: PageGetter): Promise<Omit<PropertyInfo, 'name'|'borough'>> {
-  const nopv = await getNOPVInfo(pageGetter, bbl, cache);
-  const soa = await getSOAInfo(pageGetter, bbl, cache);
+export async function getPropertyInfoForBBLWithPageGetter(bbl: BBL, cache: DOFCache, pageGetter: PageGetter, filter: linkFilter = defaultLinkFilter): Promise<Omit<PropertyInfo, 'name'|'borough'>> {
+  const nopv = await getNOPVInfo(pageGetter, bbl, cache, filter);
+  const soa = await getSOAInfo(pageGetter, bbl, cache, filter);
 
   return {bbl: bbl.toString(), nopv, soa};
 }

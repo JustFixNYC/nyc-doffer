@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import docopt from 'docopt';
 import ProgressBar from 'progress';
 import { databaseConnector, nycdbConnector } from './lib/db';
-import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter } from './doffer';
+import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, linkFilter, defaultLinkFilter } from './doffer';
 import { BBL } from './lib/bbl';
 
 dotenv.config();
@@ -14,7 +14,7 @@ Usage:
   dbtool.js test_connection
   dbtool.js test_nycdb_connection
   dbtool.js build_bbl_table <table_name>
-  dbtool.js scrape <table_name>
+  dbtool.js scrape <table_name> [--only-year=<year>]
   dbtool.js -h | --help
 `;
 
@@ -23,8 +23,18 @@ type CommandOptions = {
   test_nycdb_connection: boolean;
   build_bbl_table: boolean;
   scrape: boolean;
+  '--only-year': string|null;
   '<table_name>': string|null
 };
+
+function assertNullOrInt(value: string|null): number|null {
+  if (value === null) return null;
+  const num = parseInt(value);
+  if (isNaN(num)) {
+    throw new Error(`${value} is not a number!`);
+  }
+  return num;
+}
 
 function assertNotNull<T>(value: T|null): T {
   if (value === null) {
@@ -43,7 +53,9 @@ async function main() {
   } else if (options.build_bbl_table) {
     await buildBblTable(assertNotNull(options['<table_name>']));
   } else if (options.scrape) {
-    await scrapeBBLsInTable(assertNotNull(options['<table_name>']));
+    const tableName = assertNotNull(options['<table_name>']);
+    const year = assertNullOrInt(options['--only-year']);
+    await scrapeBBLsInTable(tableName, year);
   }
 }
 
@@ -97,18 +109,18 @@ async function exportNycdbBblsToTable(nycdbTable: string, table: string, pageSiz
   await nycdb.$pool.end();
 }
 
-async function scrapeBBLsInTable(table: string) {
+async function scrapeBBLsInTable(table: string, onlyYear: number|null) {
   const db = databaseConnector.get();
   const pageGetter = new PageGetter();
   const cache = getCacheFromEnvironment();
-
+  const filter: linkFilter = onlyYear ? (link) => link.date.startsWith(onlyYear.toString()) : defaultLinkFilter;
   while (true) {
     const row: {bbl: string}|null = await db.oneOrNone(`SELECT bbl FROM ${table} WHERE success IS NULL LIMIT 1;`);
     if (row === null) break;
     let success = false;
     let errorMessage = null;
     try {
-      await getPropertyInfoForBBLWithPageGetter(BBL.from(row.bbl), cache, pageGetter);
+      await getPropertyInfoForBBLWithPageGetter(BBL.from(row.bbl), cache, pageGetter, filter);
       success = true;
     } catch (e) {
       console.error(e);
