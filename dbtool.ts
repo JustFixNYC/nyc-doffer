@@ -2,6 +2,8 @@ import dotenv from 'dotenv';
 import docopt from 'docopt';
 import ProgressBar from 'progress';
 import { databaseConnector, nycdbConnector } from './lib/db';
+import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter } from './doffer';
+import { BBL } from './lib/bbl';
 
 dotenv.config();
 
@@ -12,6 +14,7 @@ Usage:
   dbtool.js test_connection
   dbtool.js test_nycdb_connection
   dbtool.js build_bbl_table <table_name>
+  dbtool.js scrape <table_name>
   dbtool.js -h | --help
 `;
 
@@ -19,6 +22,7 @@ type CommandOptions = {
   test_connection: boolean;
   test_nycdb_connection: boolean;
   build_bbl_table: boolean;
+  scrape: boolean;
   '<table_name>': string|null
 };
 
@@ -38,6 +42,8 @@ async function main() {
     await testNycdbConnection();
   } else if (options.build_bbl_table) {
     await buildBblTable(assertNotNull(options['<table_name>']));
+  } else if (options.scrape) {
+    await scrapeBBLsInTable(assertNotNull(options['<table_name>']));
   }
 }
 
@@ -91,6 +97,27 @@ async function exportNycdbBblsToTable(nycdbTable: string, table: string, pageSiz
   }
 
   await nycdb.$pool.end();
+}
+
+async function scrapeBBLsInTable(table: string) {
+  const db = databaseConnector.get();
+  const pageGetter = new PageGetter();
+  const cache = getCacheFromEnvironment();
+
+  while (true) {
+    const row: {bbl: string}|null = await db.oneOrNone(`SELECT bbl FROM ${table} WHERE success IS NULL LIMIT 1;`);
+    if (row === null) break;
+    let success = false;
+    try {
+      await getPropertyInfoForBBLWithPageGetter(BBL.from(row.bbl), cache, pageGetter);
+      success = true;
+    } catch (e) {
+      console.error(e);
+    }
+    await db.none(`UPDATE ${table} SET success = $1 WHERE bbl = $2`, [success, row.bbl]);
+  }
+
+  await db.$pool.end();
 }
 
 async function testConnection() {

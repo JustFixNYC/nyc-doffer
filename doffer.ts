@@ -40,7 +40,7 @@ export function getCacheFromEnvironment(): DOFCache {
   return cache;
 }
 
-class PageGetter {
+export class PageGetter {
   private browser: puppeteer.Browser|null = null;
   private page: puppeteer.Page|null = null;
   private bbl: BBL|null = null;
@@ -170,14 +170,18 @@ async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache): Pr
   return results;
 }
 
+export async function getPropertyInfoForBBLWithPageGetter(bbl: BBL, cache: DOFCache, pageGetter: PageGetter): Promise<Omit<PropertyInfo, 'name'|'borough'>> {
+  const nopv = await getNOPVInfo(pageGetter, bbl, cache);
+  const soa = await getSOAInfo(pageGetter, bbl, cache);
+
+  return {bbl: bbl.toString(), nopv, soa};
+}
+
 async function getPropertyInfoForBBL(bbl: BBL, name: string, borough: string, cache: DOFCache, log: Log = defaultLog): Promise<PropertyInfo> {
   const pageGetter = new PageGetter(log);
 
   try {
-    const nopv = await getNOPVInfo(pageGetter, bbl, cache);
-    const soa = await getSOAInfo(pageGetter, bbl, cache);
-
-    return {bbl: bbl.toString(), name, borough, nopv, soa};
+    return {...await getPropertyInfoForBBLWithPageGetter(bbl, cache, pageGetter), name, borough};
   } finally {
     await pageGetter.shutdown();
   }
