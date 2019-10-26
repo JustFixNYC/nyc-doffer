@@ -44,8 +44,17 @@ async function testNycdbConnection() {
   await nycdb.$pool.end();
 }
 
-async function buildBblTable() {
-  // TODO: Create BBL table.
+async function buildBblTable(table: string) {
+  console.log(`Creating ${table} table.`);
+  const createTableSQL = `
+    CREATE TABLE ${table} (
+      bbl char(10) PRIMARY KEY,
+      success boolean
+    );
+  `;
+  const db = databaseConnector.get();
+  await db.none(createTableSQL);
+
   await exportNycdbBblsToTable('hpd_registrations');
 }
 
