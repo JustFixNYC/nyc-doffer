@@ -56,15 +56,9 @@ export class S3CacheBackend implements DOFCacheBackend<Buffer> {
 }
 
 export function getFinalS3Key(key: string): string {
-  const finalExt = posix.extname(key);
-
-  if (finalExt === '.br') {
-    let basename = posix.basename(key, finalExt);
-    const penultimateExt = posix.extname(basename);
-    basename = posix.basename(basename, penultimateExt);
-    return `${basename}${finalExt}${penultimateExt}`;
-  }
-
+  // We used to have some complicated logic that swapped the order
+  // of extensions like .html.br to .br.html but it was buggy and
+  // confusing so screw it.
   return key;
 }
 
