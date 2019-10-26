@@ -15,6 +15,7 @@ Usage:
   dbtool.js test_nycdb_connection
   dbtool.js build_bbl_table <table_name>
   dbtool.js scrape <table_name> [--only-year=<year>]
+  dbtool.js clear_scraping_errors <table_name>
   dbtool.js -h | --help
 `;
 
@@ -22,6 +23,7 @@ type CommandOptions = {
   test_connection: boolean;
   test_nycdb_connection: boolean;
   build_bbl_table: boolean;
+  clear_scraping_errors: boolean;
   scrape: boolean;
   '--only-year': string|null;
   '<table_name>': string|null
@@ -56,7 +58,15 @@ async function main() {
     const tableName = assertNotNull(options['<table_name>']);
     const year = assertNullOrInt(options['--only-year']);
     await scrapeBBLsInTable(tableName, year);
+  } else if (options.clear_scraping_errors) {
+    const tableName = assertNotNull(options['<table_name>']);
+    await clearScrapingErrors(tableName);
   }
+}
+
+async function clearScrapingErrors(table: string) {
+  const db = databaseConnector.get();
+  await db.none(`update ${table} set success = NULL, errormessage = NULL where success = false;`);
 }
 
 async function testNycdbConnection() {
