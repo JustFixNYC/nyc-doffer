@@ -11,7 +11,7 @@ const DOC = `
 Usage:
   dbtool.js test_connection
   dbtool.js test_nycdb_connection
-  dbtool.js build_bbl_table
+  dbtool.js build_bbl_table <table_name>
   dbtool.js -h | --help
 `;
 
@@ -19,7 +19,15 @@ type CommandOptions = {
   test_connection: boolean;
   test_nycdb_connection: boolean;
   build_bbl_table: boolean;
+  '<table_name>': string|null
 };
+
+function assertNotNull<T>(value: T|null): T {
+  if (value === null) {
+    throw new Error(`Assertion failure!`);
+  }
+  return value;
+}
 
 async function main() {
   const options: CommandOptions = docopt.docopt(DOC, {version: VERSION});
@@ -29,7 +37,7 @@ async function main() {
   } else if (options.test_nycdb_connection) {
     await testNycdbConnection();
   } else if (options.build_bbl_table) {
-    await buildBblTable();
+    await buildBblTable(assertNotNull(options['<table_name>']));
   }
 }
 
@@ -45,7 +53,7 @@ async function testNycdbConnection() {
 }
 
 async function buildBblTable(table: string) {
-  console.log(`Creating ${table} table.`);
+  console.log(`Creating table '${table}'.`);
   const createTableSQL = `
     CREATE TABLE ${table} (
       bbl char(10) PRIMARY KEY,
@@ -55,23 +63,34 @@ async function buildBblTable(table: string) {
   const db = databaseConnector.get();
   await db.none(createTableSQL);
 
-  await exportNycdbBblsToTable('hpd_registrations');
+  await exportNycdbBblsToTable('hpd_registrations', table);
+
+  await db.$pool.end();
 }
 
-async function exportNycdbBblsToTable(table: string, pageSize: number = 10_000) {
+async function exportNycdbBblsToTable(nycdbTable: string, table: string, pageSize: number = 10_000) {
   const nycdb = nycdbConnector.get();
-  const {count}: {count: number} = await nycdb.one(`SELECT COUNT(DISTINCT bbl) FROM ${table};`);
+  const db = databaseConnector.get();
+  const {count}: {count: number} = await nycdb.one(`SELECT COUNT(DISTINCT bbl) FROM ${nycdbTable};`);
 
-  console.log(`Found ${Intl.NumberFormat().format(count)} unique BBLs in ${table} table.`);
+  console.log(`Found ${Intl.NumberFormat().format(count)} unique BBLs in ${nycdbTable} table.`);
 
   const pages = Math.ceil(count / pageSize);
   const bar = new ProgressBar(':bar :percent', { total: pages });
+  const columnSet = new databaseConnector.pgp.helpers.ColumnSet(['bbl', 'success'], {table});
   for (let i = 0; i < pages; i++) {
-    const bbls: { bbl: string }[] = await nycdb.many(
-      `SELECT DISTINCT bbl FROM ${table} ORDER BY bbl LIMIT ${pageSize} OFFSET ${i * pageSize};`);
-    bbls; // TODO: Replace this with inserting BBLs into table.
+    const nycdbRows: { bbl: string }[] = await nycdb.many(
+      `SELECT DISTINCT bbl FROM ${nycdbTable} ORDER BY bbl LIMIT ${pageSize} OFFSET ${i * pageSize};`);
+    const insertRows = nycdbRows.map(row => ({
+      bbl: row.bbl,
+      success: null
+    }));
+    const insertSQL = databaseConnector.pgp.helpers.insert(insertRows, columnSet);
+    await db.none(insertSQL);
     bar.tick();
   }
+
+  await nycdb.$pool.end();
 }
 
 async function testConnection() {

@@ -2,8 +2,10 @@ import pgPromise from 'pg-promise';
 
 class DbSingleton {
   private db: pgPromise.IDatabase<{}>|null = null;
+  readonly pgp: pgPromise.IMain<{}>;
 
   constructor(readonly envVar: string) {
+    this.pgp = pgPromise({capSQL: true});
   }
 
   get() {
@@ -14,8 +16,7 @@ class DbSingleton {
         throw new Error(`Please define ${this.envVar} in your environment!`);
       }
 
-      const pgp = pgPromise({});
-      this.db = pgp(url);
+      this.db = this.pgp(url);
     }
 
     return this.db;
