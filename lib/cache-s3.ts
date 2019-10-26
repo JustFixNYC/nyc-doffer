@@ -30,9 +30,15 @@ export class S3CacheBackend implements DOFCacheBackend<Buffer> {
       Bucket: this.bucket,
       Key: getFinalS3Key(key)
     });
-    const result = await this.client.send(getObjectCmd);
-    if (result.Body) {
-      return await collectStream(result.Body);
+    try {
+      const result = await this.client.send(getObjectCmd);
+      if (result.Body) {
+        return await collectStream(result.Body);
+      }
+    } catch (e) {
+      if (e.name !== 'NoSuchKey') {
+        throw e;
+      }
     }
     return undefined;
   }
