@@ -63,7 +63,8 @@ async function buildBblTable(table: string) {
   const createTableSQL = `
     CREATE TABLE ${table} (
       bbl char(10) PRIMARY KEY,
-      success boolean
+      success boolean,
+      errorMessage text
     );
   `;
   const db = databaseConnector.get();
@@ -83,14 +84,11 @@ async function exportNycdbBblsToTable(nycdbTable: string, table: string, pageSiz
 
   const pages = Math.ceil(count / pageSize);
   const bar = new ProgressBar(':bar :percent', { total: pages });
-  const columnSet = new databaseConnector.pgp.helpers.ColumnSet(['bbl', 'success'], {table});
+  const columnSet = new databaseConnector.pgp.helpers.ColumnSet(['bbl'], {table});
   for (let i = 0; i < pages; i++) {
     const nycdbRows: { bbl: string }[] = await nycdb.many(
       `SELECT DISTINCT bbl FROM ${nycdbTable} ORDER BY bbl LIMIT ${pageSize} OFFSET ${i * pageSize};`);
-    const insertRows = nycdbRows.map(row => ({
-      bbl: row.bbl,
-      success: null
-    }));
+    const insertRows = nycdbRows.map(row => ({bbl: row.bbl}));
     const insertSQL = databaseConnector.pgp.helpers.insert(insertRows, columnSet);
     await db.none(insertSQL);
     bar.tick();
@@ -108,13 +106,15 @@ async function scrapeBBLsInTable(table: string) {
     const row: {bbl: string}|null = await db.oneOrNone(`SELECT bbl FROM ${table} WHERE success IS NULL LIMIT 1;`);
     if (row === null) break;
     let success = false;
+    let errorMessage = null;
     try {
       await getPropertyInfoForBBLWithPageGetter(BBL.from(row.bbl), cache, pageGetter);
       success = true;
     } catch (e) {
       console.error(e);
+      errorMessage = e.message;
     }
-    await db.none(`UPDATE ${table} SET success = $1 WHERE bbl = $2`, [success, row.bbl]);
+    await db.none(`UPDATE ${table} SET success = $1, errorMessage = $2 WHERE bbl = $3`, [success, errorMessage, row.bbl]);
   }
 
   await db.$pool.end();
