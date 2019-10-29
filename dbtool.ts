@@ -16,6 +16,7 @@ Usage:
   dbtool.js build_bbl_table <table_name>
   dbtool.js scrape <table_name> [--only-year=<year>]
   dbtool.js clear_scraping_errors <table_name>
+  dbtool.js scrape_status <table_name>
   dbtool.js -h | --help
 `;
 
@@ -25,6 +26,7 @@ type CommandOptions = {
   build_bbl_table: boolean;
   clear_scraping_errors: boolean;
   scrape: boolean;
+  scrape_status: boolean;
   '--only-year': string|null;
   '<table_name>': string|null
 };
@@ -58,6 +60,8 @@ async function main() {
     const tableName = assertNotNull(options['<table_name>']);
     const year = assertNullOrInt(options['--only-year']);
     await scrapeBBLsInTable(tableName, year);
+  } else if (options.scrape_status) {
+    await scrapeStatus(assertNotNull(options['<table_name>']));
   } else if (options.clear_scraping_errors) {
     const tableName = assertNotNull(options['<table_name>']);
     await clearScrapingErrors(tableName);
@@ -117,6 +121,29 @@ async function exportNycdbBblsToTable(nycdbTable: string, table: string, pageSiz
   }
 
   await nycdb.$pool.end();
+}
+
+async function scrapeStatus(table: string) {
+  const db = databaseConnector.get();
+  let successful = 0;
+  let unsuccessful = 0;
+  let remaining = 0;
+  const kinds: {count: string, success: boolean|null}[] = await db.many(
+    `SELECT COUNT(*), success FROM ${table} GROUP BY success;`
+  );
+  kinds.forEach(kind => {
+    const count = parseInt(kind.count);
+    if (kind.success === true) {
+      successful = count;
+    } else if (kind.success === false) {
+      unsuccessful = count;
+    } else {
+      remaining = count;
+    }
+  });
+  const stats = {successful, unsuccessful, remaining};
+  console.log(stats);
+  await db.$pool.end();
 }
 
 async function scrapeBBLsInTable(table: string, onlyYear: number|null) {
