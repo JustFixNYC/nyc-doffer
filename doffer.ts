@@ -21,6 +21,7 @@ dotenv.config();
 export const CACHE_DIR = path.join(__dirname, '.dof-cache');
 export const S3_BUCKET = process.env.S3_BUCKET || '';
 export const DISABLE_BROTLI = !!process.env.DISABLE_BROTLI;
+const PAGES_UNTIL_BROWSER_RESTART = 1000;
 
 export function getCacheFromEnvironment(): DOFCache {
   let cacheBackend: DOFCacheBackend;
@@ -44,11 +45,18 @@ export class PageGetter {
   private browser: puppeteer.Browser|null = null;
   private page: puppeteer.Page|null = null;
   private bbl: BBL|null = null;
+  private pagesRetrieved: number = 0;
 
   constructor(readonly log: Log = defaultLog) {
   }
 
   async getPage(bbl: BBL, linkName: SidebarLinkName): Promise<string> {
+    if (this.pagesRetrieved >= PAGES_UNTIL_BROWSER_RESTART) {
+      // Hopefully this will avoid errors like
+      // "Error: Protocol error (Page.navigate): Session closed. Most likely the page has been closed."
+      await this.shutdown();
+    }
+    this.pagesRetrieved += 1;
     if (!this.browser) {
       this.browser = await launchBrowser();
     }
@@ -89,6 +97,7 @@ export class PageGetter {
   }
 
   async shutdown() {
+    this.pagesRetrieved = 0;
     this.bbl = null;
     if (this.page) {
       await this.page.close();
