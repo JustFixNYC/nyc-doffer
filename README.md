@@ -71,12 +71,15 @@ heroku container:push web && heroku container:release web
 
 You can also try using `node deploy-to-heroku.js`.
 
-## Database integration
+## Batch jobs
 
 You can optionally integrate with a Postgres database to run
-batch jobs that scrape DOF records for swaths of the city.
+batch jobs that scrape DOF records for swaths of the city,
+also integrating with [NYCDB][] to figure out what BBLs to cover.
 
-To do this, you will need to create a Postgres database and user
+### Database integration
+
+You will need to create a Postgres database and user
 by running `psql` as an administrative user, e.g.:
 
 ```
@@ -104,18 +107,46 @@ Now you can test your connection with:
 node dbtool.js test_connection
 ```
 
-## NYCDB integration
+### NYCDB integration
 
-You can also optionally integrate with [NYCDB][] to figure out what BBLs to run
-batch jobs on.
-
-To do this, define the `NYCDB_URL` environment variable and test your connection with:
+Define the `NYCDB_URL` environment variable and test your connection with:
 
 ```
 node dbtool.js test_nycdb_connection
 ```
 
 [NYCDB]: https://github.com/nycdb/nycdb
+
+### Running a batch job
+
+All information about a batch job is stored in a single table, which
+you name.  To build a table called `boop`, that uses BBLs from
+the `bbl` column of NYCDB's HPD registrations dataset, use:
+
+```
+dbtool.js build_bbl_table boop hpd_registrations
+```
+
+Now you can scrape the BBLs in the table with:
+
+```
+dbtool.js scrape boop
+```
+
+The table keeps track of what BBLs were scraped successfully,
+which still need to be scraped, and which had errors occur. You can
+view these statistics with:
+
+```
+dbtool.js scrape_status boop
+```
+
+You can also clear the "error" state on all BBLs, essentially
+re-queuing them for scraping, with the following command:
+
+```
+dbtool.js clear_scraping_errors boop
+```
 
 ## Running tests
 

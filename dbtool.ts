@@ -18,7 +18,7 @@ const DOC = `
 Usage:
   dbtool.js test_connection
   dbtool.js test_nycdb_connection
-  dbtool.js build_bbl_table <table_name>
+  dbtool.js build_bbl_table <table_name> <source_nycdb_table_name>
   dbtool.js scrape <table_name> [--only-year=<year>]
   dbtool.js clear_scraping_errors <table_name>
   dbtool.js scrape_status <table_name>
@@ -33,6 +33,7 @@ type CommandOptions = {
   scrape: boolean;
   scrape_status: boolean;
   '--only-year': string|null;
+  '<source_nycdb_table_name>': string|null;
   '<table_name>': string|null
 };
 
@@ -60,7 +61,9 @@ async function main() {
   } else if (options.test_nycdb_connection) {
     await testNycdbConnection();
   } else if (options.build_bbl_table) {
-    await buildBblTable(assertNotNull(options['<table_name>']));
+    const tableName = assertNotNull(options['<table_name>']);
+    const sourceNycdbTable = assertNotNull(options['<source_nycdb_table_name>']);
+    await buildBblTable(tableName, sourceNycdbTable);
   } else if (options.scrape) {
     const tableName = assertNotNull(options['<table_name>']);
     const year = assertNullOrInt(options['--only-year']);
@@ -89,24 +92,15 @@ async function testNycdbConnection() {
   await nycdb.$pool.end();
 }
 
-async function buildBblTable(table: string) {
-  console.log(`Creating table '${table}'.`);
-  const createTableSQL = `
+async function buildBblTable(table: string, nycdbTable: string, pageSize: number = 10_000) {
+  let createdTable = false;
+  const createSQL = `
     CREATE TABLE ${table} (
       bbl char(10) PRIMARY KEY,
       success boolean,
       errorMessage text
     );
   `;
-  const db = databaseConnector.get();
-  await db.none(createTableSQL);
-
-  await exportNycdbBblsToTable('hpd_registrations', table);
-
-  await db.$pool.end();
-}
-
-async function exportNycdbBblsToTable(nycdbTable: string, table: string, pageSize: number = 10_000) {
   const nycdb = nycdbConnector.get();
   const db = databaseConnector.get();
   const {count}: {count: number} = await nycdb.one(`SELECT COUNT(DISTINCT bbl) FROM ${nycdbTable};`);
@@ -121,11 +115,17 @@ async function exportNycdbBblsToTable(nycdbTable: string, table: string, pageSiz
       `SELECT DISTINCT bbl FROM ${nycdbTable} ORDER BY bbl LIMIT ${pageSize} OFFSET ${i * pageSize};`);
     const insertRows = nycdbRows.map(row => ({bbl: row.bbl}));
     const insertSQL = databaseConnector.pgp.helpers.insert(insertRows, columnSet);
+    if (!createdTable) {
+      console.log(`Creating table '${table}'.`);
+      await db.none(createSQL);
+      createdTable = true;
+    }
     await db.none(insertSQL);
     bar.tick();
   }
 
   await nycdb.$pool.end();
+  await db.$pool.end();
 }
 
 async function getScrapeStatus(table: string) {
