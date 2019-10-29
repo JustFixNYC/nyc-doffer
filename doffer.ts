@@ -21,6 +21,7 @@ dotenv.config();
 export const CACHE_DIR = path.join(__dirname, '.dof-cache');
 export const S3_BUCKET = process.env.S3_BUCKET || '';
 export const DISABLE_BROTLI = !!process.env.DISABLE_BROTLI;
+const PAGES_UNTIL_BROWSER_RESTART = 1000;
 
 export function getCacheFromEnvironment(): DOFCache {
   let cacheBackend: DOFCacheBackend;
@@ -40,15 +41,22 @@ export function getCacheFromEnvironment(): DOFCache {
   return cache;
 }
 
-class PageGetter {
+export class PageGetter {
   private browser: puppeteer.Browser|null = null;
   private page: puppeteer.Page|null = null;
   private bbl: BBL|null = null;
+  private pagesRetrieved: number = 0;
 
   constructor(readonly log: Log = defaultLog) {
   }
 
   async getPage(bbl: BBL, linkName: SidebarLinkName): Promise<string> {
+    if (this.pagesRetrieved >= PAGES_UNTIL_BROWSER_RESTART) {
+      // Hopefully this will avoid errors like
+      // "Error: Protocol error (Page.navigate): Session closed. Most likely the page has been closed."
+      await this.shutdown();
+    }
+    this.pagesRetrieved += 1;
     if (!this.browser) {
       this.browser = await launchBrowser();
     }
@@ -89,6 +97,7 @@ class PageGetter {
   }
 
   async shutdown() {
+    this.pagesRetrieved = 0;
     this.bbl = null;
     if (this.page) {
       await this.page.close();
@@ -114,6 +123,10 @@ async function cachedGeoSearch(text: string, cache: DOFCache, log: Log = default
   });
 }
 
+export type linkFilter = (link: {date: string}) => boolean;
+
+export const defaultLinkFilter: linkFilter = () => true;
+
 /** Information about a BBL's Notice of Property Value (NOPV) for a particular period. */
 type NOPVInfo = NOPVLink & {
   /** The BBL's Net Operating Income (NOI) for the period. */
@@ -121,12 +134,12 @@ type NOPVInfo = NOPVLink & {
 };
 
 /** Retrieves and extracts all information related to a BBL's Notices of Property Value. */
-async function getNOPVInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache): Promise<NOPVInfo[]>  {
+async function getNOPVInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache, filter: linkFilter = defaultLinkFilter): Promise<NOPVInfo[]>  {
   const results: NOPVInfo[] = [];
 
   const page = SidebarLinkName.noticesOfPropertyValue;
   const html = await pageGetter.cachedGetPageHTML(bbl, page, cache, 'nopv');
-  const links = parseNOPVLinks(html);
+  const links = parseNOPVLinks(html).filter(filter);
 
   for (let link of links) {
     const name = `${link.date} NOPV for BBL ${bbl}`;
@@ -150,12 +163,12 @@ export type PropertyInfo = {
   soa: SOAInfo[]
 };
 
-async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache): Promise<SOAInfo[]> {
+async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache, filter: linkFilter = defaultLinkFilter): Promise<SOAInfo[]> {
   const results: SOAInfo[] = [];
 
   const page = SidebarLinkName.propertyTaxBills;
   const html = await pageGetter.cachedGetPageHTML(bbl, page, cache, 'soa');
-  const links = parseSOALinks(html);
+  const links = parseSOALinks(html).filter(filter);
 
   for (let link of links) {
     if (link.quarter !== 1) continue;
@@ -170,14 +183,18 @@ async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache): Pr
   return results;
 }
 
+export async function getPropertyInfoForBBLWithPageGetter(bbl: BBL, cache: DOFCache, pageGetter: PageGetter, filter: linkFilter = defaultLinkFilter): Promise<Omit<PropertyInfo, 'name'|'borough'>> {
+  const nopv = await getNOPVInfo(pageGetter, bbl, cache, filter);
+  const soa = await getSOAInfo(pageGetter, bbl, cache, filter);
+
+  return {bbl: bbl.toString(), nopv, soa};
+}
+
 async function getPropertyInfoForBBL(bbl: BBL, name: string, borough: string, cache: DOFCache, log: Log = defaultLog): Promise<PropertyInfo> {
   const pageGetter = new PageGetter(log);
 
   try {
-    const nopv = await getNOPVInfo(pageGetter, bbl, cache);
-    const soa = await getSOAInfo(pageGetter, bbl, cache);
-
-    return {bbl: bbl.toString(), name, borough, nopv, soa};
+    return {...await getPropertyInfoForBBLWithPageGetter(bbl, cache, pageGetter), name, borough};
   } finally {
     await pageGetter.shutdown();
   }

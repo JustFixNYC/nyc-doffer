@@ -25,6 +25,8 @@ async function main() {
   const buf = Buffer.from(content, 'utf8');
 
   console.log(`Using cache ${cache.description}.`);
+  console.log(`Getting ${key}...`);
+  expect(await cache.get(key)).to.equal(undefined);
   console.log(`Creating ${key}...`);
   await cache.set(key, buf);
 
