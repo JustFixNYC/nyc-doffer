@@ -124,13 +124,13 @@ you name.  To build a table called `boop`, that uses BBLs from
 the `bbl` column of NYCDB's HPD registrations dataset, use:
 
 ```
-dbtool.js build_bbl_table boop hpd_registrations
+node dbtool.js build_bbl_table boop hpd_registrations
 ```
 
 Now you can scrape the BBLs in the table with:
 
 ```
-dbtool.js scrape boop
+node dbtool.js scrape boop
 ```
 
 The table keeps track of what BBLs were scraped successfully,
@@ -138,14 +138,14 @@ which still need to be scraped, and which had errors occur. You can
 view these statistics with:
 
 ```
-dbtool.js scrape_status boop
+node dbtool.js scrape_status boop
 ```
 
 You can also clear the "error" state on all BBLs, essentially
 re-queuing them for scraping, with the following command:
 
 ```
-dbtool.js clear_scraping_errors boop
+node dbtool.js clear_scraping_errors boop
 ```
 
 ## Running tests
