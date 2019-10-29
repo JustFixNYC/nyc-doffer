@@ -4,10 +4,15 @@ import ProgressBar from 'progress';
 import { databaseConnector, nycdbConnector } from './lib/db';
 import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, linkFilter, defaultLinkFilter } from './doffer';
 import { BBL } from './lib/bbl';
+import { asJSONCache } from './lib/cache';
 
 dotenv.config();
 
 const VERSION = '0.0.1';
+
+// How frequently we publish the scrape statistics during the scrape. If
+// this is N, we will re-publish the stats every N BBLs we scrape.
+const PUBLISH_SCRAPE_STATUS_MOD = 2;
 
 const DOC = `
 Usage:
@@ -123,7 +128,7 @@ async function exportNycdbBblsToTable(nycdbTable: string, table: string, pageSiz
   await nycdb.$pool.end();
 }
 
-async function scrapeStatus(table: string) {
+async function getScrapeStatus(table: string) {
   const db = databaseConnector.get();
   let successful = 0;
   let unsuccessful = 0;
@@ -141,9 +146,20 @@ async function scrapeStatus(table: string) {
       remaining = count;
     }
   });
-  const stats = {successful, unsuccessful, remaining};
+  return {table, successful, unsuccessful, remaining};
+}
+
+async function scrapeStatus(table: string) {
+  const stats = await getScrapeStatus(table);
+  const cache = getCacheFromEnvironment();
   console.log(stats);
-  await db.$pool.end();
+  console.log(`You should also be able to see this information at:`);
+  console.log(cache.urlForKey(statusKeyForScrape(table)));
+  await databaseConnector.get().$pool.end();
+}
+
+function statusKeyForScrape(table: string) {
+  return `status-${table}.json`;
 }
 
 async function scrapeBBLsInTable(table: string, onlyYear: number|null) {
@@ -151,6 +167,8 @@ async function scrapeBBLsInTable(table: string, onlyYear: number|null) {
   const pageGetter = new PageGetter();
   const cache = getCacheFromEnvironment();
   const filter: linkFilter = onlyYear ? (link) => link.date.startsWith(onlyYear.toString()) : defaultLinkFilter;
+  const statusKey = statusKeyForScrape(table)
+  let i = 0;
   while (true) {
     const row: {bbl: string}|null = await db.oneOrNone(`SELECT bbl FROM ${table} WHERE success IS NULL LIMIT 1;`);
     if (row === null) break;
@@ -164,6 +182,12 @@ async function scrapeBBLsInTable(table: string, onlyYear: number|null) {
       errorMessage = e.message;
     }
     await db.none(`UPDATE ${table} SET success = $1, errorMessage = $2 WHERE bbl = $3`, [success, errorMessage, row.bbl]);
+    if (i % PUBLISH_SCRAPE_STATUS_MOD === 0) {
+      console.log(`Updating ${cache.urlForKey(statusKey)}.`);
+      const status = await getScrapeStatus(table);
+      await asJSONCache(cache).set(statusKey, status);
+    }
+    i++;
   }
 
   await db.$pool.end();
