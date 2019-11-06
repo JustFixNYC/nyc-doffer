@@ -1,5 +1,7 @@
-import https from 'https';
 import { Readable } from 'stream';
+import request from 'request-promise-native';
+
+const TIMEOUT_MS = 10_000;
 
 export function collectStream(stream: Readable): Promise<Buffer> {
   const chunks: Buffer[] = [];
@@ -14,20 +16,17 @@ export function collectStream(stream: Readable): Promise<Buffer> {
 /**
  * Download the given URL and return its contents.
  * 
- * This function is pretty primitive and doesn't support timeouts, redirects,
- * or other fancy things.
- * 
- * An error is raised if the HTTP status code isn't 200.
+ * An error is raised if the HTTP status code isn't 2xx.
  */
 export async function download(url: string): Promise<Buffer> {
-  return new Promise<Buffer>((resolve, reject) => {
-    const req = https.get(url, res => {
-      if (res.statusCode !== 200) {
-        return reject(new Error(`Got HTTP ${res.statusCode} from ${url}`));
-      }
-      collectStream(res).then(resolve, reject);
-    });
-    req.on('error', reject);
-    req.end();
+  return request(url, {
+    simple: true,   // Any response other than 2xx will be rejected.
+    timeout: TIMEOUT_MS,
+    encoding: null  // Ensures the result will be a Buffer, not a string.
+  }).then(value => {
+    if (!(value instanceof Buffer)) {
+      throw new Error(`Expected value to be a Buffer but it is ${typeof(value)}!`);
+    }
+    return value;
   });
 }
