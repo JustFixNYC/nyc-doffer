@@ -184,8 +184,8 @@ async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache, fil
 }
 
 export async function getPropertyInfoForBBLWithPageGetter(bbl: BBL, cache: DOFCache, pageGetter: PageGetter, filter: linkFilter = defaultLinkFilter): Promise<Omit<PropertyInfo, 'name'|'borough'>> {
-  const nopv = await getNOPVInfo(pageGetter, bbl, cache, filter);
   const soa = await getSOAInfo(pageGetter, bbl, cache, filter);
+  const nopv = await getNOPVInfo(pageGetter, bbl, cache, filter);
 
   return {bbl: bbl.toString(), nopv, soa};
 }
