@@ -4,13 +4,20 @@ import { expect } from 'chai';
 
 import { parseNOPVLinks, parseSOALinks } from '../lib/dof';
 
+// Change this temporarily to update snapshots.
+const REWRITE_SNAPSHOTS = false;
+
 function getHTML(filename: string): string {
   return fs.readFileSync(path.join(__dirname, 'html', filename), 'utf-8');
 }
 
 function ensureEqualJSON(object: any, filename: string) {
   const actual = JSON.parse(JSON.stringify(object));
-  const expected = JSON.parse(fs.readFileSync(path.join(__dirname, 'json', filename), 'utf-8'));
+  const snapshot = path.join(__dirname, 'json', filename);
+  if (REWRITE_SNAPSHOTS) {
+    fs.writeFileSync(snapshot, JSON.stringify(object, null, 2), { encoding: 'utf-8' });
+  }
+  const expected = JSON.parse(fs.readFileSync(snapshot, 'utf-8'));
   expect(actual).to.deep.equal(expected);
 }
 

@@ -66,6 +66,8 @@ export class PageGetter {
     if (!this.bbl || this.bbl.toString() !== bbl.toString()) {
       this.bbl = bbl;
       if (!await searchForBBL(this.page, this.bbl, this.log)) {
+        // NOTE: Do not change this error message, we currently search for
+        // it in SQL queries in dbtool.ts!
         throw new Error(`DOF property page for BBL ${this.bbl} does not exist`);
       }
     }
@@ -123,7 +125,7 @@ async function cachedGeoSearch(text: string, cache: DOFCache, log: Log = default
   });
 }
 
-export type linkFilter = (link: {date: string}) => boolean;
+export type linkFilter = (link: {kind: 'soa'|'nopv', date: string}) => boolean;
 
 export const defaultLinkFilter: linkFilter = () => true;
 
