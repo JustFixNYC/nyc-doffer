@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 import docopt from 'docopt';
 import ProgressBar from 'progress';
 import { databaseConnector, nycdbConnector } from './lib/db';
-import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, linkFilter, defaultLinkFilter } from './doffer';
+import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, linkFilter } from './doffer';
 import { BBL } from './lib/bbl';
 import { asJSONCache } from './lib/cache';
 
@@ -19,7 +19,7 @@ Usage:
   dbtool.js test_connection
   dbtool.js test_nycdb_connection
   dbtool.js build_bbl_table <table_name> <source_nycdb_table_name>
-  dbtool.js scrape <table_name> [--only-year=<year>]
+  dbtool.js scrape <table_name> [--only-year=<year>] [--only-soa] [--only-nopv]
   dbtool.js clear_scraping_errors <table_name>
   dbtool.js scrape_status <table_name>
   dbtool.js -h | --help
@@ -33,6 +33,8 @@ type CommandOptions = {
   scrape: boolean;
   scrape_status: boolean;
   '--only-year': string|null;
+  '--only-nopv': boolean;
+  '--only-soa': boolean;
   '<source_nycdb_table_name>': string|null;
   '<table_name>': string|null
 };
@@ -65,9 +67,11 @@ async function main() {
     const sourceNycdbTable = assertNotNull(options['<source_nycdb_table_name>']);
     await buildBblTable(tableName, sourceNycdbTable);
   } else if (options.scrape) {
-    const tableName = assertNotNull(options['<table_name>']);
-    const year = assertNullOrInt(options['--only-year']);
-    await scrapeBBLsInTable(tableName, year);
+    await scrapeBBLsInTable(assertNotNull(options['<table_name>']), {
+      onlyYear: assertNullOrInt(options['--only-year']),
+      onlyNOPV: options['--only-nopv'],
+      onlySOA: options['--only-soa']
+    });
   } else if (options.scrape_status) {
     await scrapeStatus(assertNotNull(options['<table_name>']));
   } else if (options.clear_scraping_errors) {
@@ -78,7 +82,10 @@ async function main() {
 
 async function clearScrapingErrors(table: string) {
   const db = databaseConnector.get();
-  await db.none(`update ${table} set success = NULL, errormessage = NULL where success = false;`);
+  await db.none(
+    `update ${table} set success = NULL, errormessage = NULL` +
+    `  where success = false and errormessage not like 'DOF property page for BBL % does not exist';`
+  );
 }
 
 async function testNycdbConnection() {
@@ -162,11 +169,23 @@ function statusKeyForScrape(table: string) {
   return `status-${table}.json`;
 }
 
-async function scrapeBBLsInTable(table: string, onlyYear: number|null) {
+type ScrapeOptions = {
+  onlyYear: number|null,
+  onlySOA: boolean,
+  onlyNOPV: boolean
+};
+
+async function scrapeBBLsInTable(table: string, options: ScrapeOptions) {
+  const {onlyYear, onlySOA, onlyNOPV} = options;
   const db = databaseConnector.get();
   const pageGetter = new PageGetter();
   const cache = getCacheFromEnvironment();
-  const filter: linkFilter = onlyYear ? (link) => link.date.startsWith(onlyYear.toString()) : defaultLinkFilter;
+  const filter: linkFilter = (link) => {
+    if (onlyYear && !link.date.startsWith(onlyYear.toString())) return false;
+    if (onlySOA && link.kind !== 'soa') return false;
+    if (onlyNOPV && link.kind !== 'nopv') return false;
+    return true;
+  };
   const statusKey = statusKeyForScrape(table)
   let i = 0;
   while (true) {

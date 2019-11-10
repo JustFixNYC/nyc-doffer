@@ -102,6 +102,7 @@ export async function gotoSidebarLink(page: puppeteer.Page, name: SidebarLinkNam
 
 /** Represents a link to a Notice of Property Value PDF. */
 export type NOPVLink = {
+  kind: 'nopv',
   /** The period, e.g. "Revised 2015 - 2016". */
   period: string,
   /** The statement date in ISO format, e.g. "2016-01-02". */
@@ -128,7 +129,7 @@ export function parseNOPVLinks(html: string): NOPVLink[] {
     const date = parseDate($(link).text().trim());
     const url = link.attribs['href'];
     if (!date || !url) return;
-    links.push({period, date: getISODate(date), url});
+    links.push({kind: 'nopv', period, date: getISODate(date), url});
   });
 
   return links;
@@ -136,6 +137,7 @@ export function parseNOPVLinks(html: string): NOPVLink[] {
 
 /** Represents a link to a Statement of Account (SOA) PDF. */
 export type SOALink = {
+  kind: 'soa',
   /** The period, e.g. "2018-2019". */
   period: string,
   /** The statement quarter (1-4). */
@@ -167,7 +169,7 @@ export function parseSOALinks(html: string): SOALink[] {
     const date = parseDate(match[2].trim());
     const url = link.attribs['href'];
     if (!date || !url) return;
-    links.push({period, quarter, date: getISODate(date), url});
+    links.push({kind: 'soa', period, quarter, date: getISODate(date), url});
   });
 
   return links;
