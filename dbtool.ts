@@ -19,14 +19,14 @@ Usage:
   dbtool.js test_nycdb_connection
   dbtool.js build_bbl_table <table_name> <source_nycdb_table_name>
   dbtool.js scrape <table_name> [--only-year=<year>] [--only-soa] [--only-nopv]
-    [--parallelism=<n>] [--no-browser]
+    [--concurrency=<n>] [--no-browser]
   dbtool.js clear_scraping_errors <table_name>
   dbtool.js scrape_status <table_name>
   dbtool.js -h | --help
 
 Options:
-  -h, --help          Show this screen.
-  --parallelism=<n>  Maximum number of BBLs to process at once [default: 1].
+  -h, --help         Show this screen.
+  --concurrency=<n>  Maximum number of BBLs to process at once [default: 1].
 `;
 
 type CommandOptions = {
@@ -40,7 +40,7 @@ type CommandOptions = {
   '--only-nopv': boolean;
   '--only-soa': boolean;
   '--no-browser': boolean;
-  '--parallelism': string;
+  '--concurrency': string;
   '<source_nycdb_table_name>': string|null;
   '<table_name>': string|null
 };
@@ -71,7 +71,7 @@ function getPositiveInt(value: string): number {
 
 async function main() {
   const options: CommandOptions = docopt.docopt(DOC, {version: VERSION});
-  const parallelism = getPositiveInt(options["--parallelism"]);
+  const concurrency = getPositiveInt(options["--concurrency"]);
 
   if (options.test_connection) {
     await testConnection();
@@ -87,7 +87,7 @@ async function main() {
       onlyNOPV: options['--only-nopv'],
       onlySOA: options['--only-soa'],
       noBrowser: options['--no-browser'],
-      parallelism
+      concurrency
     });
   } else if (options.scrape_status) {
     await scrapeStatus(assertNotNull(options['<table_name>']));
@@ -192,14 +192,14 @@ type ScrapeOptions = {
   onlySOA: boolean,
   onlyNOPV: boolean,
   noBrowser: boolean,
-  parallelism: number
+  concurrency: number
 };
 
 async function scrapeBBLsInTable(table: string, options: ScrapeOptions) {
-  const {onlyYear, onlySOA, onlyNOPV, parallelism} = options;
+  const {onlyYear, onlySOA, onlyNOPV, concurrency} = options;
   const db = databaseConnector.get();
   const pageGetters: PageGetter[] = [];
-  for (let i = 0; i < parallelism; i++) {
+  for (let i = 0; i < concurrency; i++) {
     pageGetters.push(new PageGetter(defaultLog, !options.noBrowser));
   }
   const cache = getCacheFromEnvironment();
@@ -212,7 +212,7 @@ async function scrapeBBLsInTable(table: string, options: ScrapeOptions) {
   const statusKey = statusKeyForScrape(table)
   console.log(`Using cache ${cache.description}.`);
   while (true) {
-    const rows: {bbl: string}[] = await db.manyOrNone(`SELECT bbl FROM ${table} WHERE success IS NULL LIMIT ${parallelism};`);
+    const rows: {bbl: string}[] = await db.manyOrNone(`SELECT bbl FROM ${table} WHERE success IS NULL LIMIT ${concurrency};`);
     if (rows.length === 0) break;
 
     await Promise.all(rows.map(async (row, i) => {
