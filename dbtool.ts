@@ -83,7 +83,7 @@ async function main() {
 async function clearScrapingErrors(table: string) {
   const db = databaseConnector.get();
   await db.none(
-    `update ${table} set success = NULL, errormessage = NULL` +
+    `update ${table} set success = NULL, errormessage = NULL, info = NULL` +
     `  where success = false and errormessage not like 'DOF property page for BBL % does not exist';`
   );
 }
@@ -105,7 +105,8 @@ async function buildBblTable(table: string, nycdbTable: string, pageSize: number
     CREATE TABLE ${table} (
       bbl char(10) PRIMARY KEY,
       success boolean,
-      errorMessage text
+      errorMessage text,
+      info jsonb
     );
   `;
   const nycdb = nycdbConnector.get();
@@ -193,14 +194,20 @@ async function scrapeBBLsInTable(table: string, options: ScrapeOptions) {
     if (row === null) break;
     let success = false;
     let errorMessage = null;
+    let info = null;
     try {
-      await getPropertyInfoForBBLWithPageGetter(BBL.from(row.bbl), cache, pageGetter, filter);
+      info = await getPropertyInfoForBBLWithPageGetter(BBL.from(row.bbl), cache, pageGetter, filter);
       success = true;
     } catch (e) {
       console.error(e);
       errorMessage = e.message;
     }
-    await db.none(`UPDATE ${table} SET success = $1, errorMessage = $2 WHERE bbl = $3`, [success, errorMessage, row.bbl]);
+    await db.none(`UPDATE ${table} SET success = $1, errorMessage = $2, info = $3 WHERE bbl = $4`, [
+      success,
+      errorMessage,
+      info,
+      row.bbl
+    ]);
     if (i % PUBLISH_SCRAPE_STATUS_MOD === 0) {
       console.log(`Updating ${cache.urlForKey(statusKey)}.`);
       const status = await getScrapeStatus(table);
