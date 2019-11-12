@@ -25,9 +25,9 @@ Rent  Stabilization  Fee-  Chg    105                           01/01/2020  5035
 
 const MULTI_RENTSTAB_TOTAL = 96 + 95 + 105 + 105;
 
-describe('()', () => {
+describe('extractRentStabilizedUnits()', () => {
   const textAndUnits: [string, number|null][] = [
-    ['Rent Stabilization Fee- Chg      103            01/01/2020  50347300            $1,030.00', 103],
+    ['Rent Stabilization Fee- Chg      103 01/01/2020', 103],
     ['Housing-Rent Stabilization       15', 15],
     ['blahh', null],
   ];
