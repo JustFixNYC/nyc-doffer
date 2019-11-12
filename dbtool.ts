@@ -10,19 +10,22 @@ dotenv.config();
 
 const VERSION = '0.0.1';
 
-// How frequently we publish the scrape statistics during the scrape. If
-// this is N, we will re-publish the stats every N BBLs we scrape.
-const PUBLISH_SCRAPE_STATUS_MOD = 2;
-
 const DOC = `
+Database tool for bulk scraping the NYC DOF website.
+
 Usage:
   dbtool.js test_connection
   dbtool.js test_nycdb_connection
   dbtool.js build_bbl_table <table_name> <source_nycdb_table_name>
   dbtool.js scrape <table_name> [--only-year=<year>] [--only-soa] [--only-nopv]
+    [--parallelism=<n>]
   dbtool.js clear_scraping_errors <table_name>
   dbtool.js scrape_status <table_name>
   dbtool.js -h | --help
+
+Options:
+  -h, --help          Show this screen.
+  --parallelism=<n>  Maximum number of BBLs to process at once [default: 1].
 `;
 
 type CommandOptions = {
@@ -35,6 +38,7 @@ type CommandOptions = {
   '--only-year': string|null;
   '--only-nopv': boolean;
   '--only-soa': boolean;
+  '--parallelism': string;
   '<source_nycdb_table_name>': string|null;
   '<table_name>': string|null
 };
@@ -55,8 +59,17 @@ function assertNotNull<T>(value: T|null): T {
   return value;
 }
 
+function getPositiveInt(value: string): number {
+  const num = parseInt(value);
+  if (isNaN(num) || num <= 0) {
+    throw new Error(`'${value}' must be a positive integer!`);
+  }
+  return num;
+}
+
 async function main() {
   const options: CommandOptions = docopt.docopt(DOC, {version: VERSION});
+  const parallelism = getPositiveInt(options["--parallelism"]);
 
   if (options.test_connection) {
     await testConnection();
@@ -70,7 +83,8 @@ async function main() {
     await scrapeBBLsInTable(assertNotNull(options['<table_name>']), {
       onlyYear: assertNullOrInt(options['--only-year']),
       onlyNOPV: options['--only-nopv'],
-      onlySOA: options['--only-soa']
+      onlySOA: options['--only-soa'],
+      parallelism
     });
   } else if (options.scrape_status) {
     await scrapeStatus(assertNotNull(options['<table_name>']));
@@ -173,13 +187,17 @@ function statusKeyForScrape(table: string) {
 type ScrapeOptions = {
   onlyYear: number|null,
   onlySOA: boolean,
-  onlyNOPV: boolean
+  onlyNOPV: boolean,
+  parallelism: number
 };
 
 async function scrapeBBLsInTable(table: string, options: ScrapeOptions) {
-  const {onlyYear, onlySOA, onlyNOPV} = options;
+  const {onlyYear, onlySOA, onlyNOPV, parallelism} = options;
   const db = databaseConnector.get();
-  const pageGetter = new PageGetter();
+  const pageGetters: PageGetter[] = [];
+  for (let i = 0; i < parallelism; i++) {
+    pageGetters.push(new PageGetter());
+  }
   const cache = getCacheFromEnvironment();
   const filter: linkFilter = (link) => {
     if (onlyYear && !link.date.startsWith(onlyYear.toString())) return false;
@@ -188,35 +206,42 @@ async function scrapeBBLsInTable(table: string, options: ScrapeOptions) {
     return true;
   };
   const statusKey = statusKeyForScrape(table)
-  let i = 0;
+  console.log(`Using cache ${cache.description}.`);
   while (true) {
-    const row: {bbl: string}|null = await db.oneOrNone(`SELECT bbl FROM ${table} WHERE success IS NULL LIMIT 1;`);
-    if (row === null) break;
-    let success = false;
-    let errorMessage = null;
-    let info = null;
-    try {
-      info = await getPropertyInfoForBBLWithPageGetter(BBL.from(row.bbl), cache, pageGetter, filter);
-      success = true;
-    } catch (e) {
-      console.error(e);
-      errorMessage = e.message;
-    }
-    await db.none(`UPDATE ${table} SET success = $1, errorMessage = $2, info = $3 WHERE bbl = $4`, [
-      success,
-      errorMessage,
-      info,
-      row.bbl
-    ]);
-    if (i % PUBLISH_SCRAPE_STATUS_MOD === 0) {
-      console.log(`Updating ${cache.urlForKey(statusKey)}.`);
-      const status = await getScrapeStatus(table);
-      await asJSONCache(cache).set(statusKey, status);
-    }
-    i++;
+    const rows: {bbl: string}[] = await db.manyOrNone(`SELECT bbl FROM ${table} WHERE success IS NULL LIMIT ${parallelism};`);
+    if (rows.length === 0) break;
+
+    await Promise.all(rows.map(async (row, i) => {
+      const pageGetter = pageGetters[i];
+      let success = false;
+      let errorMessage = null;
+      let info = null;
+      try {
+        info = await getPropertyInfoForBBLWithPageGetter(BBL.from(row.bbl), cache, pageGetter, filter);
+        success = true;
+      } catch (e) {
+        console.error(e);
+        errorMessage = e.message;
+      }
+      await db.none(`UPDATE ${table} SET success = $1, errorMessage = $2, info = $3 WHERE bbl = $4`, [
+        success,
+        errorMessage,
+        info,
+        row.bbl
+      ]);
+    }));
+
+    const status = await getScrapeStatus(table);
+    console.log(`${status.successful} ok / ${status.unsuccessful} failed / ${status.remaining} remain`);
+    console.log(`Updating ${cache.urlForKey(statusKey)}.`);
+    await asJSONCache(cache).set(statusKey, status);
   }
 
-  await pageGetter.shutdown();
+  console.log('Done.');
+
+  for (let i = 0; i < pageGetters.length; i++) {
+    await pageGetters[i].shutdown();
+  }
   await db.$pool.end();
 }
 
