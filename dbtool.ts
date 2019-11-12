@@ -216,6 +216,7 @@ async function scrapeBBLsInTable(table: string, options: ScrapeOptions) {
     i++;
   }
 
+  await pageGetter.shutdown();
   await db.$pool.end();
 }
 
