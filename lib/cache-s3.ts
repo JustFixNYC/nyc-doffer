@@ -51,7 +51,15 @@ export class S3CacheBackend implements DOFCacheBackend<Buffer> {
       ContentLength: value.length,
       ...getS3PutObjectInputForKey(key),
     });
-    await this.client.send(putObjectCmd);
+    const result = await this.client.send(putObjectCmd);
+
+    // I have absolutely no idea why this method wouldn't throw if it failed,
+    // but a whole scrape job didn't fully write to S3 for some reason so
+    // we'll double-check this.
+    const status = result.$metadata.httpStatusCode;
+    if (status !== 200) {
+      throw new Error(`Write failed with HTTP ${status}`);
+    }
   }
 }
 
