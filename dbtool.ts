@@ -5,6 +5,7 @@ import { databaseConnector, nycdbConnector } from './lib/db';
 import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, linkFilter } from './doffer';
 import { BBL } from './lib/bbl';
 import { asJSONCache } from './lib/cache';
+import { defaultLog } from './lib/log';
 
 dotenv.config();
 
@@ -18,7 +19,7 @@ Usage:
   dbtool.js test_nycdb_connection
   dbtool.js build_bbl_table <table_name> <source_nycdb_table_name>
   dbtool.js scrape <table_name> [--only-year=<year>] [--only-soa] [--only-nopv]
-    [--parallelism=<n>]
+    [--parallelism=<n>] [--no-browser]
   dbtool.js clear_scraping_errors <table_name>
   dbtool.js scrape_status <table_name>
   dbtool.js -h | --help
@@ -38,6 +39,7 @@ type CommandOptions = {
   '--only-year': string|null;
   '--only-nopv': boolean;
   '--only-soa': boolean;
+  '--no-browser': boolean;
   '--parallelism': string;
   '<source_nycdb_table_name>': string|null;
   '<table_name>': string|null
@@ -84,6 +86,7 @@ async function main() {
       onlyYear: assertNullOrInt(options['--only-year']),
       onlyNOPV: options['--only-nopv'],
       onlySOA: options['--only-soa'],
+      noBrowser: options['--no-browser'],
       parallelism
     });
   } else if (options.scrape_status) {
@@ -188,6 +191,7 @@ type ScrapeOptions = {
   onlyYear: number|null,
   onlySOA: boolean,
   onlyNOPV: boolean,
+  noBrowser: boolean,
   parallelism: number
 };
 
@@ -196,7 +200,7 @@ async function scrapeBBLsInTable(table: string, options: ScrapeOptions) {
   const db = databaseConnector.get();
   const pageGetters: PageGetter[] = [];
   for (let i = 0; i < parallelism; i++) {
-    pageGetters.push(new PageGetter());
+    pageGetters.push(new PageGetter(defaultLog, !options.noBrowser));
   }
   const cache = getCacheFromEnvironment();
   const filter: linkFilter = (link) => {
