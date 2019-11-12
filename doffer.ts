@@ -47,10 +47,13 @@ export class PageGetter {
   private bbl: BBL|null = null;
   private pagesRetrieved: number = 0;
 
-  constructor(readonly log: Log = defaultLog) {
+  constructor(readonly log: Log = defaultLog, readonly useBrowser = true) {
   }
 
   async getPage(bbl: BBL, linkName: SidebarLinkName): Promise<string> {
+    if (!this.useBrowser) {
+      throw new Error(`PageGetter is configured to not use browser`);
+    }
     if (this.pagesRetrieved >= PAGES_UNTIL_BROWSER_RESTART) {
       // Hopefully this will avoid errors like
       // "Error: Protocol error (Page.navigate): Session closed. Most likely the page has been closed."
