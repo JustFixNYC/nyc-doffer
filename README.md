@@ -170,10 +170,10 @@ To run tests against the DOF website to make sure scraping works, run:
 node test-dof-site.js
 ```
 
-## Running integration tests with AWS S3
+## Running integration tests with your configured cache
 
-To run tests against S3 to make sure it works, run:
+To run tests against your configured cache to make sure it works, run:
 
 ```
-node test-s3-cache.js
+node test-configured-cache.js
 ```
