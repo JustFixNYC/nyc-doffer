@@ -21,6 +21,7 @@ dotenv.config();
 export const CACHE_DIR = path.join(__dirname, '.dof-cache');
 export const S3_BUCKET = process.env.S3_BUCKET || '';
 export const DISABLE_BROTLI = !!process.env.DISABLE_BROTLI;
+export const HTML_CACHE_KEY_PREFIX = process.env.HTML_CACHE_KEY_PREFIX || 'html';
 const PAGES_UNTIL_BROWSER_RESTART = 1000;
 
 export function getCacheFromEnvironment(): DOFCache {
@@ -80,7 +81,7 @@ export class PageGetter {
 
   async cachedGetPageHTML(bbl: BBL, linkName: SidebarLinkName, cache: DOFCache, cacheSubkey: string): Promise<string> {
     return asTextCache(cache).lazyGet(
-      `html/${bbl.asPath()}/${cacheSubkey}.html`,
+      `${HTML_CACHE_KEY_PREFIX}/${bbl.asPath()}/${cacheSubkey}.html`,
       () => this.getPage(bbl, linkName)
     );
   }
