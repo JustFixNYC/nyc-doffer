@@ -223,6 +223,10 @@ async function outputCsvFromScrape(table: string) {
         wroteHeader = true;
       }
       let rs: string = '';
+      // Yup, we're only including the rent stabilization count of the
+      // very first SOA in our scrape, and we're not including anything
+      // about NOPVs.  This is because the DOF blocked us from downloading
+      // anything but the very latest SOAs.
       if (row.info && row.info.soa.length && row.info.soa[0].rentStabilizedUnits) {
         rs = row.info.soa[0].rentStabilizedUnits.toString();
       }
@@ -232,8 +236,6 @@ async function outputCsvFromScrape(table: string) {
     }
   });
   const outfile = fs.createWriteStream(csvFilename);
-  // This might go faster if we just do:
-  // select bbl, success, info->'soa'->0->>'rentStabilizedUnits' as rent_stabilized_units from ${table}
   const query = new QueryStream(
     `SELECT bbl, success, info FROM ${table};`);
 
