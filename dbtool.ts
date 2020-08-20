@@ -1,8 +1,11 @@
+import fs from 'fs';
 import dotenv from 'dotenv';
 import docopt from 'docopt';
 import ProgressBar from 'progress';
+import QueryStream from "pg-query-stream";
+import { Transform } from "stream";
 import { databaseConnector, nycdbConnector } from './lib/db';
-import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, linkFilter } from './doffer';
+import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, linkFilter, BasicPropertyInfo } from './doffer';
 import { BBL } from './lib/bbl';
 import { asJSONCache } from './lib/cache';
 import { defaultLog } from './lib/log';
@@ -22,6 +25,7 @@ Usage:
     [--concurrency=<n>] [--no-browser]
   dbtool.js clear_scraping_errors <table_name>
   dbtool.js scrape_status <table_name>
+  dbtool.js output_csv <table_name>
   dbtool.js -h | --help
 
 Options:
@@ -33,6 +37,7 @@ type CommandOptions = {
   test_connection: boolean;
   test_nycdb_connection: boolean;
   build_bbl_table: boolean;
+  output_csv: boolean;
   clear_scraping_errors: boolean;
   scrape: boolean;
   scrape_status: boolean;
@@ -94,6 +99,9 @@ async function main() {
   } else if (options.clear_scraping_errors) {
     const tableName = assertNotNull(options['<table_name>']);
     await clearScrapingErrors(tableName);
+  } else if (options.output_csv) {
+    const tableName = assertNotNull(options['<table_name>']);
+    await outputCsvFromScrape(tableName);
   }
 }
 
@@ -195,6 +203,49 @@ type ScrapeOptions = {
   concurrency: number
 };
 
+async function outputCsvFromScrape(table: string) {
+  type Row = {
+    bbl: string,
+    info: BasicPropertyInfo|null,
+    success: boolean,
+  };
+  const db = databaseConnector.get();
+  const total = parseInt((await db.one(`SELECT COUNT(*) FROM ${table};`)).count);
+  const csvFilename = `${table}.csv`;
+  console.log(`Writing ${total} rows to ${csvFilename}.`);
+  const bar = new ProgressBar(':bar :percent', { total });
+  let wroteHeader = false;
+  const toCsv = new Transform({
+    objectMode: true,
+    transform(row: Row, enc, callback) {
+      if (!wroteHeader) {
+        this.push(`bbl,success,rent_stabilized_units\n`);
+        wroteHeader = true;
+      }
+      let rs: string = '';
+      // Yup, we're only including the rent stabilization count of the
+      // very first SOA in our scrape, and we're not including anything
+      // about NOPVs.  This is because the DOF blocked us from downloading
+      // anything but the very latest SOAs.
+      if (row.info && row.info.soa.length && row.info.soa[0].rentStabilizedUnits) {
+        rs = row.info.soa[0].rentStabilizedUnits.toString();
+      }
+      this.push(`${row.bbl},${row.success ? "t" : "f"},${rs}\n`);
+      bar.tick();
+      callback();
+    }
+  });
+  const outfile = fs.createWriteStream(csvFilename);
+  const query = new QueryStream(
+    `SELECT bbl, success, info FROM ${table};`);
+
+  await db.stream(query, s => {
+    s.pipe(toCsv).pipe(outfile);
+  });
+
+  await db.$pool.end();
+}
+
 async function scrapeBBLsInTable(table: string, options: ScrapeOptions) {
   const {onlyYear, onlySOA, onlyNOPV, concurrency} = options;
   const db = databaseConnector.get();
@@ -218,8 +269,8 @@ async function scrapeBBLsInTable(table: string, options: ScrapeOptions) {
     await Promise.all(rows.map(async (row, i) => {
       const pageGetter = pageGetters[i];
       let success = false;
-      let errorMessage = null;
-      let info = null;
+      let errorMessage: string|null = null;
+      let info: BasicPropertyInfo|null = null;
       try {
         info = await getPropertyInfoForBBLWithPageGetter(BBL.from(row.bbl), cache, pageGetter, filter);
         success = true;
