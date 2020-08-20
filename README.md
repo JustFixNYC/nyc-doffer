@@ -148,6 +148,12 @@ re-queuing them for scraping, with the following command:
 node dbtool.js clear_scraping_errors boop
 ```
 
+Finally, you can output a CSV containing the scraped data with:
+
+```
+node dbtool.js output_csv boop
+```
+
 ## Running tests
 
 Run tests via:
