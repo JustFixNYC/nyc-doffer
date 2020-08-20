@@ -5,7 +5,7 @@ import ProgressBar from 'progress';
 import QueryStream from "pg-query-stream";
 import { Transform } from "stream";
 import { databaseConnector, nycdbConnector } from './lib/db';
-import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, linkFilter, BasicPropertyInfo } from './doffer';
+import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, linkFilter, BasicPropertyInfo, getCachedSoaPdfUrl } from './doffer';
 import { BBL } from './lib/bbl';
 import { asJSONCache } from './lib/cache';
 import { defaultLog } from './lib/log';
@@ -209,6 +209,7 @@ async function outputCsvFromScrape(table: string) {
     info: BasicPropertyInfo|null,
     success: boolean,
   };
+  const cache = getCacheFromEnvironment();
   const db = databaseConnector.get();
   const total = parseInt((await db.one(`SELECT COUNT(*) FROM ${table};`)).count);
   const csvFilename = `${table}.csv`;
@@ -219,18 +220,23 @@ async function outputCsvFromScrape(table: string) {
     objectMode: true,
     transform(row: Row, enc, callback) {
       if (!wroteHeader) {
-        this.push(`bbl,success,rent_stabilized_units\n`);
+        this.push(`bbl,success,rent_stabilized_units,soa_pdf_url\n`);
         wroteHeader = true;
       }
+      let url: string = '';
       let rs: string = '';
       // Yup, we're only including the rent stabilization count of the
       // very first SOA in our scrape, and we're not including anything
       // about NOPVs.  This is because the DOF blocked us from downloading
       // anything but the very latest SOAs.
-      if (row.info && row.info.soa.length && row.info.soa[0].rentStabilizedUnits) {
-        rs = row.info.soa[0].rentStabilizedUnits.toString();
+      if (row.success && row.info && row.info.soa.length) {
+        const firstSOA = row.info.soa[0];
+        url = getCachedSoaPdfUrl(cache, row.bbl, firstSOA.date) || '';
+        if (firstSOA.rentStabilizedUnits) {
+          rs = firstSOA.rentStabilizedUnits.toString();
+        }
       }
-      this.push(`${row.bbl},${row.success ? "t" : "f"},${rs}\n`);
+      this.push(`${row.bbl},${row.success ? "t" : "f"},${rs},${url}\n`);
       bar.tick();
       callback();
     }

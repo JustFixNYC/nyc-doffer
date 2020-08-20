@@ -169,6 +169,16 @@ export type PropertyInfo = {
   soa: SOAInfo[]
 };
 
+/**
+ * Returns the URL to the cached PDF for the given BBL and ISO date.
+ */
+export function getCachedSoaPdfUrl(cache: DOFCache, bblString: string, isoDate: string) {
+  // This implementation isn't very DRY but I'm not sure how to
+  // make it any more DRY, unfortunately.
+  const bbl = BBL.from(bblString);
+  return cache.urlForKey(`pdf/${bbl.asPath()}/soa-${isoDate}.pdf`);
+}
+
 async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache, filter: linkFilter = defaultLinkFilter): Promise<SOAInfo[]> {
   const results: SOAInfo[] = [];
 
