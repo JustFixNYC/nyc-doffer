@@ -302,7 +302,9 @@ async function outputCsvFromScrape(table: string) {
   });
   const outfile = fs.createWriteStream(csvFilename);
   const query = new QueryStream(
-    `SELECT bbl, success, info FROM ${table};`);
+    `SELECT bbl, success, info FROM ${table};`, undefined, {
+      highWaterMark: 5_000,
+    });
 
   await db.stream(query, s => {
     s.pipe(toCsv).pipe(outfile);
