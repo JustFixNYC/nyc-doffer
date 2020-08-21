@@ -45,6 +45,12 @@ export type BatchedPgInserterOptions<T> = {
 export class BatchedPgInserter<T> extends Writable {
   readonly columnSet: ColumnSet<T>;
 
+  /**
+   * This promise will resolve when the stream has ended, and will
+   * throw if the stream errors.
+   */
+  readonly ended: Promise<void>;
+
   constructor(readonly options: BatchedPgInserterOptions<T>) {
     super({
       objectMode: true,
@@ -52,6 +58,7 @@ export class BatchedPgInserter<T> extends Writable {
     });
     const { helpers, columns, table } = options;
     this.columnSet = new helpers.ColumnSet(Object.keys(columns), {table});
+    this.ended = endOfStream(this);
   }
 
   _batchedInsert(objects: T[], callback: (error?: Error | null) => void) {
@@ -71,7 +78,7 @@ export class BatchedPgInserter<T> extends Writable {
 /**
  * A promise that resolves when the given stream has ended.
  */
-export function endOfStream(stream: Writable): Promise<void> {
+function endOfStream(stream: Writable): Promise<void> {
   return new Promise((resolve, reject) => {
     stream.on('end', resolve);
     stream.on('error', reject);

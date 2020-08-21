@@ -9,7 +9,7 @@ import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGette
 import { BBL } from './lib/bbl';
 import { asJSONCache } from './lib/cache';
 import { defaultLog } from './lib/log';
-import { BatchedPgInserter, endOfStream, streamingProgressBar } from './lib/stream-util';
+import { BatchedPgInserter, streamingProgressBar } from './lib/stream-util';
 
 dotenv.config();
 
@@ -161,12 +161,11 @@ async function buildBblTable(table: string, nycdbTable: string) {
     table,
     highWaterMark,
   });
-  const endInsertion = endOfStream(inserter);
   await nycdb.stream(query, s => {
     s.pipe(streamingProgressBar(bar)).pipe(inserter);
   });
 
-  await endInsertion;
+  await inserter.ended;
   await nycdb.$pool.end();
   await db.$pool.end();
 }
