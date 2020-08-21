@@ -138,18 +138,24 @@ function streamingProgressBar(bar: ProgressBar) {
 class BatchedInserter<T> extends Writable {
   readonly columnSet: ColumnSet<T>;
 
-  constructor(readonly db: IDatabase<any, any>, readonly helpers: IHelpers, columns: T, table: string) {
+  constructor(readonly options: {
+    db: IDatabase<any, any>,
+    helpers: IHelpers,
+    columns: T,
+    table: string,
+    highWaterMark?: number,
+  }) {
     super({
       objectMode: true,
-      highWaterMark: 1000,
+      highWaterMark: options.highWaterMark,
     });
+    const { helpers, columns, table } = options;
     this.columnSet = new helpers.ColumnSet(Object.keys(columns), {table});
   }
 
   _batchedInsert(objects: T[], callback: (error?: Error | null) => void) {
-    // console.log(`Writing ${objects.length} rows.`);
-    const sql = this.helpers.insert(objects, this.columnSet);
-    this.db.none(sql).then(() => callback(null)).catch(callback);
+    const sql = this.options.helpers.insert(objects, this.columnSet);
+    this.options.db.none(sql).then(() => callback(null)).catch(callback);
   }
 
   _write(chunk: T, enc: unknown, callback: (error?: Error | null) => void) {
@@ -159,6 +165,13 @@ class BatchedInserter<T> extends Writable {
   _writev(chunks: Array<{ chunk: T, encoding: string }>, callback: (error?: Error | null) => void) {
     this._batchedInsert(chunks.map(chunk => chunk.chunk), callback);
   }
+}
+
+function endOfStream(stream: Writable): Promise<void> {
+  return new Promise((resolve, reject) => {
+    stream.on('end', resolve);
+    stream.on('error', reject);
+  });
 }
 
 async function buildBblTable(table: string, nycdbTable: string) {
@@ -183,15 +196,21 @@ async function buildBblTable(table: string, nycdbTable: string) {
   console.log(`Creating table '${table}'.`);
   await db.none(createSQL);
 
+  const highWaterMark = 1000;
   const bar = new ProgressBar(':bar :percent', { total: count });
-  const query = new QueryStream(`SELECT DISTINCT bbl FROM ${nycdbTable}`, undefined, {highWaterMark: 1000});
-  const inserter = new BatchedInserter<Row>(db, databaseConnector.pgp.helpers, {
-    bbl: '',
-  }, table);
-  const endInsertion = new Promise((resolve, reject) => {
-    inserter.on('end', resolve);
-    inserter.on('error', reject);
+  const query = new QueryStream(`SELECT DISTINCT bbl FROM ${nycdbTable}`, undefined, {
+    highWaterMark,
   });
+  const inserter = new BatchedInserter<Row>({
+    db,
+    helpers: databaseConnector.pgp.helpers,
+    columns: {
+      bbl: '',
+    },
+    table,
+    highWaterMark,
+  });
+  const endInsertion = endOfStream(inserter);
   await nycdb.stream(query, s => {
     s.pipe(streamingProgressBar(bar)).pipe(inserter);
   });
