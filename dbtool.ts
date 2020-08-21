@@ -189,15 +189,15 @@ async function buildBblTable(table: string, nycdbTable: string) {
   `;
   const nycdb = nycdbConnector.get();
   const db = databaseConnector.get();
-  const count = parseInt((await nycdb.one(`SELECT COUNT(DISTINCT bbl) FROM ${nycdbTable};`)).count);
+  const total = parseInt((await nycdb.one(`SELECT COUNT(DISTINCT bbl) FROM ${nycdbTable};`)).count);
 
-  console.log(`Found ${Intl.NumberFormat().format(count)} unique BBLs in ${nycdbTable} table.`);
+  console.log(`Found ${Intl.NumberFormat().format(total)} unique BBLs in ${nycdbTable} table.`);
 
   console.log(`Creating table '${table}'.`);
   await db.none(createSQL);
 
   const highWaterMark = 1000;
-  const bar = new ProgressBar(':bar :percent', { total: count });
+  const bar = new ProgressBar(':bar :percent', { total });
   const query = new QueryStream(`SELECT DISTINCT bbl FROM ${nycdbTable}`, undefined, {
     highWaterMark,
   });
