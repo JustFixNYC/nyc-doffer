@@ -222,7 +222,7 @@ async function outputCsvFromScrape(table: string) {
   const db = databaseConnector.get();
   const total = parseInt((await db.one(`SELECT COUNT(*) FROM ${table};`)).count);
   const csvFilename = `${table}.csv`;
-  console.log(`Writing ${total} rows to ${csvFilename}.`);
+  console.log(`Writing ${Intl.NumberFormat().format(total)} rows to ${csvFilename}.`);
   const bar = new ProgressBar(':bar :percent', { total });
   let wroteHeader = false;
   const toCsv = new Transform({
