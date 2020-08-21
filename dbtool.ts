@@ -3,13 +3,13 @@ import dotenv from 'dotenv';
 import docopt from 'docopt';
 import ProgressBar from 'progress';
 import QueryStream from "pg-query-stream";
-import { Transform, Writable } from "stream";
+import { Transform } from "stream";
 import { databaseConnector, nycdbConnector } from './lib/db';
 import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, linkFilter, BasicPropertyInfo, getCachedSoaPdfUrl } from './doffer';
 import { BBL } from './lib/bbl';
 import { asJSONCache } from './lib/cache';
 import { defaultLog } from './lib/log';
-import { ColumnSet, IHelpers, IDatabase } from 'pg-promise';
+import { BatchedPgInserter, endOfStream, streamingProgressBar } from './lib/stream-util';
 
 dotenv.config();
 
@@ -125,55 +125,6 @@ async function testNycdbConnection() {
   await nycdb.$pool.end();
 }
 
-function streamingProgressBar(bar: ProgressBar) {
-  return new Transform({
-    objectMode: true,
-    transform(chunk, enc, callback) {
-      bar.tick();
-      callback(null, chunk);
-    }
-  });
-}
-
-class BatchedInserter<T> extends Writable {
-  readonly columnSet: ColumnSet<T>;
-
-  constructor(readonly options: {
-    db: IDatabase<any, any>,
-    helpers: IHelpers,
-    columns: T,
-    table: string,
-    highWaterMark?: number,
-  }) {
-    super({
-      objectMode: true,
-      highWaterMark: options.highWaterMark,
-    });
-    const { helpers, columns, table } = options;
-    this.columnSet = new helpers.ColumnSet(Object.keys(columns), {table});
-  }
-
-  _batchedInsert(objects: T[], callback: (error?: Error | null) => void) {
-    const sql = this.options.helpers.insert(objects, this.columnSet);
-    this.options.db.none(sql).then(() => callback(null)).catch(callback);
-  }
-
-  _write(chunk: T, enc: unknown, callback: (error?: Error | null) => void) {
-    this._batchedInsert([chunk], callback);
-  }
-
-  _writev(chunks: Array<{ chunk: T, encoding: string }>, callback: (error?: Error | null) => void) {
-    this._batchedInsert(chunks.map(chunk => chunk.chunk), callback);
-  }
-}
-
-function endOfStream(stream: Writable): Promise<void> {
-  return new Promise((resolve, reject) => {
-    stream.on('end', resolve);
-    stream.on('error', reject);
-  });
-}
-
 async function buildBblTable(table: string, nycdbTable: string) {
   type Row = {
     bbl: string;
@@ -201,7 +152,7 @@ async function buildBblTable(table: string, nycdbTable: string) {
   const query = new QueryStream(`SELECT DISTINCT bbl FROM ${nycdbTable}`, undefined, {
     highWaterMark,
   });
-  const inserter = new BatchedInserter<Row>({
+  const inserter = new BatchedPgInserter<Row>({
     db,
     helpers: databaseConnector.pgp.helpers,
     columns: {
