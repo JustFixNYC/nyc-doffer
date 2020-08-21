@@ -196,7 +196,7 @@ async function buildBblTable(table: string, nycdbTable: string) {
   console.log(`Creating table '${table}'.`);
   await db.none(createSQL);
 
-  const highWaterMark = 1000;
+  const highWaterMark = 5_000;
   const bar = new ProgressBar(':bar :percent', { total });
   const query = new QueryStream(`SELECT DISTINCT bbl FROM ${nycdbTable}`, undefined, {
     highWaterMark,
