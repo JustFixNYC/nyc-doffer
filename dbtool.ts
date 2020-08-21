@@ -9,6 +9,7 @@ import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGette
 import { BBL } from './lib/bbl';
 import { asJSONCache } from './lib/cache';
 import { defaultLog } from './lib/log';
+import { BatchedPgInserter, streamingProgressBar } from './lib/stream-util';
 
 dotenv.config();
 
@@ -124,9 +125,12 @@ async function testNycdbConnection() {
   await nycdb.$pool.end();
 }
 
-async function buildBblTable(table: string, nycdbTable: string, pageSize: number = 10_000) {
-  let createdTable = false;
+async function buildBblTable(table: string, nycdbTable: string) {
+  type Row = {
+    bbl: string;
+  };
   const createSQL = `
+    DROP TABLE IF EXISTS ${table};
     CREATE TABLE ${table} (
       bbl char(10) PRIMARY KEY,
       success boolean,
@@ -136,27 +140,32 @@ async function buildBblTable(table: string, nycdbTable: string, pageSize: number
   `;
   const nycdb = nycdbConnector.get();
   const db = databaseConnector.get();
-  const {count}: {count: number} = await nycdb.one(`SELECT COUNT(DISTINCT bbl) FROM ${nycdbTable};`);
+  const total = parseInt((await nycdb.one(`SELECT COUNT(DISTINCT bbl) FROM ${nycdbTable};`)).count);
 
-  console.log(`Found ${Intl.NumberFormat().format(count)} unique BBLs in ${nycdbTable} table.`);
+  console.log(`Found ${Intl.NumberFormat().format(total)} unique BBLs in ${nycdbTable} table.`);
 
-  const pages = Math.ceil(count / pageSize);
-  const bar = new ProgressBar(':bar :percent', { total: pages });
-  const columnSet = new databaseConnector.pgp.helpers.ColumnSet(['bbl'], {table});
-  for (let i = 0; i < pages; i++) {
-    const nycdbRows: { bbl: string }[] = await nycdb.many(
-      `SELECT DISTINCT bbl FROM ${nycdbTable} ORDER BY bbl LIMIT ${pageSize} OFFSET ${i * pageSize};`);
-    const insertRows = nycdbRows.map(row => ({bbl: row.bbl}));
-    const insertSQL = databaseConnector.pgp.helpers.insert(insertRows, columnSet);
-    if (!createdTable) {
-      console.log(`Creating table '${table}'.`);
-      await db.none(createSQL);
-      createdTable = true;
-    }
-    await db.none(insertSQL);
-    bar.tick();
-  }
+  console.log(`Creating table '${table}'.`);
+  await db.none(createSQL);
 
+  const highWaterMark = 5_000;
+  const bar = new ProgressBar(':bar :percent', { total });
+  const query = new QueryStream(`SELECT DISTINCT bbl FROM ${nycdbTable}`, undefined, {
+    highWaterMark,
+  });
+  const inserter = new BatchedPgInserter<Row>({
+    db,
+    helpers: databaseConnector.pgp.helpers,
+    columns: {
+      bbl: '',
+    },
+    table,
+    highWaterMark,
+  });
+  await nycdb.stream(query, s => {
+    s.pipe(streamingProgressBar(bar)).pipe(inserter);
+  });
+
+  await inserter.ended;
   await nycdb.$pool.end();
   await db.$pool.end();
 }
@@ -213,7 +222,7 @@ async function outputCsvFromScrape(table: string) {
   const db = databaseConnector.get();
   const total = parseInt((await db.one(`SELECT COUNT(*) FROM ${table};`)).count);
   const csvFilename = `${table}.csv`;
-  console.log(`Writing ${total} rows to ${csvFilename}.`);
+  console.log(`Writing ${Intl.NumberFormat().format(total)} rows to ${csvFilename}.`);
   const bar = new ProgressBar(':bar :percent', { total });
   let wroteHeader = false;
   const toCsv = new Transform({
@@ -243,7 +252,9 @@ async function outputCsvFromScrape(table: string) {
   });
   const outfile = fs.createWriteStream(csvFilename);
   const query = new QueryStream(
-    `SELECT bbl, success, info FROM ${table};`);
+    `SELECT bbl, success, info FROM ${table};`, undefined, {
+      highWaterMark: 5_000,
+    });
 
   await db.stream(query, s => {
     s.pipe(toCsv).pipe(outfile);
