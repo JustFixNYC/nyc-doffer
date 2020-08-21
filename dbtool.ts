@@ -3,12 +3,13 @@ import dotenv from 'dotenv';
 import docopt from 'docopt';
 import ProgressBar from 'progress';
 import QueryStream from "pg-query-stream";
-import { Transform } from "stream";
+import { Transform, Writable } from "stream";
 import { databaseConnector, nycdbConnector } from './lib/db';
 import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, linkFilter, BasicPropertyInfo, getCachedSoaPdfUrl } from './doffer';
 import { BBL } from './lib/bbl';
 import { asJSONCache } from './lib/cache';
 import { defaultLog } from './lib/log';
+import { ColumnSet, IHelpers, IDatabase } from 'pg-promise';
 
 dotenv.config();
 
@@ -124,9 +125,48 @@ async function testNycdbConnection() {
   await nycdb.$pool.end();
 }
 
-async function buildBblTable(table: string, nycdbTable: string, pageSize: number = 10_000) {
-  let createdTable = false;
+function streamingProgressBar(bar: ProgressBar) {
+  return new Transform({
+    objectMode: true,
+    transform(chunk, enc, callback) {
+      bar.tick();
+      callback(null, chunk);
+    }
+  });
+}
+
+class BatchedInserter<T> extends Writable {
+  readonly columnSet: ColumnSet<T>;
+
+  constructor(readonly db: IDatabase<any, any>, readonly helpers: IHelpers, columns: T, table: string) {
+    super({
+      objectMode: true,
+      highWaterMark: 1000,
+    });
+    this.columnSet = new helpers.ColumnSet(Object.keys(columns), {table});
+  }
+
+  _batchedInsert(objects: T[], callback: (error?: Error | null) => void) {
+    // console.log(`Writing ${objects.length} rows.`);
+    const sql = this.helpers.insert(objects, this.columnSet);
+    this.db.none(sql).then(() => callback(null)).catch(callback);
+  }
+
+  _write(chunk: T, enc: unknown, callback: (error?: Error | null) => void) {
+    this._batchedInsert([chunk], callback);
+  }
+
+  _writev(chunks: Array<{ chunk: T, encoding: string }>, callback: (error?: Error | null) => void) {
+    this._batchedInsert(chunks.map(chunk => chunk.chunk), callback);
+  }
+}
+
+async function buildBblTable(table: string, nycdbTable: string) {
+  type Row = {
+    bbl: string;
+  };
   const createSQL = `
+    DROP TABLE IF EXISTS ${table};
     CREATE TABLE ${table} (
       bbl char(10) PRIMARY KEY,
       success boolean,
@@ -136,27 +176,27 @@ async function buildBblTable(table: string, nycdbTable: string, pageSize: number
   `;
   const nycdb = nycdbConnector.get();
   const db = databaseConnector.get();
-  const {count}: {count: number} = await nycdb.one(`SELECT COUNT(DISTINCT bbl) FROM ${nycdbTable};`);
+  const count = parseInt((await nycdb.one(`SELECT COUNT(DISTINCT bbl) FROM ${nycdbTable};`)).count);
 
   console.log(`Found ${Intl.NumberFormat().format(count)} unique BBLs in ${nycdbTable} table.`);
 
-  const pages = Math.ceil(count / pageSize);
-  const bar = new ProgressBar(':bar :percent', { total: pages });
-  const columnSet = new databaseConnector.pgp.helpers.ColumnSet(['bbl'], {table});
-  for (let i = 0; i < pages; i++) {
-    const nycdbRows: { bbl: string }[] = await nycdb.many(
-      `SELECT DISTINCT bbl FROM ${nycdbTable} ORDER BY bbl LIMIT ${pageSize} OFFSET ${i * pageSize};`);
-    const insertRows = nycdbRows.map(row => ({bbl: row.bbl}));
-    const insertSQL = databaseConnector.pgp.helpers.insert(insertRows, columnSet);
-    if (!createdTable) {
-      console.log(`Creating table '${table}'.`);
-      await db.none(createSQL);
-      createdTable = true;
-    }
-    await db.none(insertSQL);
-    bar.tick();
-  }
+  console.log(`Creating table '${table}'.`);
+  await db.none(createSQL);
 
+  const bar = new ProgressBar(':bar :percent', { total: count });
+  const query = new QueryStream(`SELECT DISTINCT bbl FROM ${nycdbTable}`, undefined, {highWaterMark: 1000});
+  const inserter = new BatchedInserter<Row>(db, databaseConnector.pgp.helpers, {
+    bbl: '',
+  }, table);
+  const endInsertion = new Promise((resolve, reject) => {
+    inserter.on('end', resolve);
+    inserter.on('error', reject);
+  });
+  await nycdb.stream(query, s => {
+    s.pipe(streamingProgressBar(bar)).pipe(inserter);
+  });
+
+  await endInsertion;
   await nycdb.$pool.end();
   await db.$pool.end();
 }
