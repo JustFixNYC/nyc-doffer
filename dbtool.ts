@@ -22,6 +22,7 @@ Usage:
   dbtool.js test_connection
   dbtool.js test_nycdb_connection
   dbtool.js build_bbl_table <table_name> <source_nycdb_table_name>
+  dbtool.js merge_bbl_tables <source_table_name> <dest_table_name>
   dbtool.js scrape <table_name> [--only-year=<year>] [--only-soa] [--only-nopv]
     [--concurrency=<n>] [--no-browser]
   dbtool.js clear_scraping_errors <table_name>
@@ -38,6 +39,7 @@ type CommandOptions = {
   test_connection: boolean;
   test_nycdb_connection: boolean;
   build_bbl_table: boolean;
+  merge_bbl_tables: boolean;
   output_soa_csv: boolean;
   clear_scraping_errors: boolean;
   scrape: boolean;
@@ -47,6 +49,8 @@ type CommandOptions = {
   '--only-soa': boolean;
   '--no-browser': boolean;
   '--concurrency': string;
+  '<source_table_name>': string|null;
+  '<dest_table_name>': string|null;
   '<source_nycdb_table_name>': string|null;
   '<table_name>': string|null;
   '<year>': string|null;
@@ -88,6 +92,10 @@ async function main() {
     const tableName = assertNotNull(options['<table_name>']);
     const sourceNycdbTable = assertNotNull(options['<source_nycdb_table_name>']);
     await buildBblTable(tableName, sourceNycdbTable);
+  } else if (options.merge_bbl_tables) {
+    const sourceTableName = assertNotNull(options['<source_table_name>']);
+    const destTableName = assertNotNull(options['<dest_table_name>']);
+    await mergeBblTables(sourceTableName, destTableName);
   } else if (options.scrape) {
     await scrapeBBLsInTable(assertNotNull(options['<table_name>']), {
       onlyYear: assertNullOrInt(options['--only-year']),
@@ -125,6 +133,31 @@ async function testNycdbConnection() {
   console.log(`Your NYCDB connection seems to be working!`);
 
   await nycdb.$pool.end();
+}
+
+async function mergeBblTables(sourceTable: string, destTable: string) {
+  const db = databaseConnector.get();
+
+  // We want this to be as non-destructive as possible, e.g. we don't want to accidentally
+  // delete a bunch of scraping information if the user forgets the order of arguments
+  // or something, hence some of the precautions taken in this SQL.
+
+  console.log(`Dropping all unscraped BBLs from ${destTable} that are in ${sourceTable}.`);
+  await db.none(
+    `DELETE FROM ${destTable} ` +
+    `WHERE bbl IN (SELECT bbl FROM ${sourceTable}) AND success IS NULL;`
+  );
+
+  console.log(`Inserting all rows from ${sourceTable} into ${destTable}, ignoring conflicts.`);
+  await db.none(
+    `INSERT INTO ${destTable} ` +
+    `SELECT * FROM ${sourceTable} ` +
+    `ON CONFLICT DO NOTHING;`
+  );
+
+  console.log(`Done.`);
+
+  await db.$pool.end();
 }
 
 async function buildBblTable(table: string, nycdbTable: string) {
