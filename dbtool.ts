@@ -7,7 +7,7 @@ import { Transform } from "stream";
 import { databaseConnector, nycdbConnector } from './lib/db';
 import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, linkFilter, BasicPropertyInfo, getCachedSoaPdfUrl } from './doffer';
 import { BBL } from './lib/bbl';
-import { asJSONCache } from './lib/cache';
+import { DOFCache, asJSONCache } from './lib/cache';
 import { defaultLog } from './lib/log';
 import { BatchedPgInserter, streamingProgressBar } from './lib/stream-util';
 
@@ -26,7 +26,7 @@ Usage:
     [--concurrency=<n>] [--no-browser]
   dbtool.js clear_scraping_errors <table_name>
   dbtool.js scrape_status <table_name>
-  dbtool.js output_csv <table_name>
+  dbtool.js output_soa_csv <table_name> <year>
   dbtool.js -h | --help
 
 Options:
@@ -38,7 +38,7 @@ type CommandOptions = {
   test_connection: boolean;
   test_nycdb_connection: boolean;
   build_bbl_table: boolean;
-  output_csv: boolean;
+  output_soa_csv: boolean;
   clear_scraping_errors: boolean;
   scrape: boolean;
   scrape_status: boolean;
@@ -48,7 +48,8 @@ type CommandOptions = {
   '--no-browser': boolean;
   '--concurrency': string;
   '<source_nycdb_table_name>': string|null;
-  '<table_name>': string|null
+  '<table_name>': string|null;
+  '<year>': string|null;
 };
 
 function assertNullOrInt(value: string|null): number|null {
@@ -100,9 +101,10 @@ async function main() {
   } else if (options.clear_scraping_errors) {
     const tableName = assertNotNull(options['<table_name>']);
     await clearScrapingErrors(tableName);
-  } else if (options.output_csv) {
+  } else if (options.output_soa_csv) {
     const tableName = assertNotNull(options['<table_name>']);
-    await outputCsvFromScrape(tableName);
+    const year = assertNotNull(options['<year>']);
+    await outputSoaCsvFromScrape(tableName, year);
   }
 }
 
@@ -212,12 +214,38 @@ type ScrapeOptions = {
   concurrency: number
 };
 
-async function outputCsvFromScrape(table: string) {
-  type Row = {
-    bbl: string,
-    info: BasicPropertyInfo|null,
-    success: boolean,
-  };
+type MinimalScrapeRow = {
+  bbl: string,
+  info: BasicPropertyInfo|null,
+  success: boolean|null,
+};
+
+type SoaRow = {
+  bbl: string,
+  success: boolean|null,
+  rentStabilizedUnits: number|null,
+  soaURL: string|null,
+};
+
+function scrapeRowToSoaRow(
+  cache: DOFCache,
+  row: MinimalScrapeRow,
+  year: string
+): SoaRow {
+  const {bbl, success} = row;
+  let soaURL: string|null = null;
+  let rentStabilizedUnits: number|null = null;
+  if (success && row.info) {
+    const soa = row.info.soa.filter(soa => soa.date.slice(0, 4) === year)[0];
+    if (soa) {
+      soaURL = getCachedSoaPdfUrl(cache, row.bbl, soa.date) || null;
+      rentStabilizedUnits = soa.rentStabilizedUnits;
+    }
+  }
+  return {bbl, success, soaURL, rentStabilizedUnits};
+}
+
+async function outputSoaCsvFromScrape(table: string, year: string) {
   const cache = getCacheFromEnvironment();
   const db = databaseConnector.get();
   const total = parseInt((await db.one(`SELECT COUNT(*) FROM ${table};`)).count);
@@ -225,36 +253,30 @@ async function outputCsvFromScrape(table: string) {
   console.log(`Writing ${Intl.NumberFormat().format(total)} rows to ${csvFilename}.`);
   const bar = new ProgressBar(':bar :percent', { total });
   let wroteHeader = false;
+  const query = new QueryStream(
+    `SELECT bbl, success, info FROM ${table};`, undefined, {
+      highWaterMark: 5_000,
+    });
   const toCsv = new Transform({
     objectMode: true,
-    transform(row: Row, enc, callback) {
+    transform(row: MinimalScrapeRow, enc, callback) {
       if (!wroteHeader) {
-        this.push(`bbl,success,rent_stabilized_units,soa_pdf_url\n`);
+        this.push(`bbl,success,rent_stabilized_units,soa_url\n`);
         wroteHeader = true;
       }
-      let url: string = '';
-      let rs: string = '';
-      // Yup, we're only including the rent stabilization count of the
-      // very first SOA in our scrape, and we're not including anything
-      // about NOPVs.  This is because the DOF blocked us from downloading
-      // anything but the very latest SOAs.
-      if (row.success && row.info && row.info.soa.length) {
-        const firstSOA = row.info.soa[0];
-        url = getCachedSoaPdfUrl(cache, row.bbl, firstSOA.date) || '';
-        if (firstSOA.rentStabilizedUnits) {
-          rs = firstSOA.rentStabilizedUnits.toString();
-        }
-      }
-      this.push(`${row.bbl},${row.success ? "t" : "f"},${rs},${url}\n`);
+      const soa = scrapeRowToSoaRow(cache, row, year);
+      this.push([
+        soa.bbl,
+        soa.success ? "t" : "f",
+        soa.rentStabilizedUnits || '',
+        soa.soaURL || '',
+      ].join(','));
+      this.push('\n');
       bar.tick();
       callback();
     }
   });
   const outfile = fs.createWriteStream(csvFilename);
-  const query = new QueryStream(
-    `SELECT bbl, success, info FROM ${table};`, undefined, {
-      highWaterMark: 5_000,
-    });
 
   await db.stream(query, s => {
     s.pipe(toCsv).pipe(outfile);
