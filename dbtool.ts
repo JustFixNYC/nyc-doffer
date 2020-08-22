@@ -10,6 +10,8 @@ import { BBL } from './lib/bbl';
 import { DOFCache, asJSONCache } from './lib/cache';
 import { defaultLog } from './lib/log';
 import { BatchedPgInserter, streamingProgressBar } from './lib/stream-util';
+import { IDatabase } from 'pg-promise';
+import { parseTableName } from './lib/util';
 
 dotenv.config();
 
@@ -28,6 +30,7 @@ Usage:
   dbtool.js clear_scraping_errors <table_name>
   dbtool.js scrape_status <table_name>
   dbtool.js output_soa_csv <table_name> <year>
+  dbtool.js output_soa_to_nycdb <table_name> <year> <dest_nycdb_table_name>
   dbtool.js -h | --help
 
 Options:
@@ -41,6 +44,7 @@ type CommandOptions = {
   build_bbl_table: boolean;
   merge_bbl_tables: boolean;
   output_soa_csv: boolean;
+  output_soa_to_nycdb: boolean;
   clear_scraping_errors: boolean;
   scrape: boolean;
   scrape_status: boolean;
@@ -52,6 +56,7 @@ type CommandOptions = {
   '<source_table_name>': string|null;
   '<dest_table_name>': string|null;
   '<source_nycdb_table_name>': string|null;
+  '<dest_nycdb_table_name>': string|null;
   '<table_name>': string|null;
   '<year>': string|null;
 };
@@ -112,7 +117,12 @@ async function main() {
   } else if (options.output_soa_csv) {
     const tableName = assertNotNull(options['<table_name>']);
     const year = assertNotNull(options['<year>']);
-    await outputSoaCsvFromScrape(tableName, year);
+    await outputSoaFromScrapeToCsv(tableName, year);
+  } else if (options.output_soa_to_nycdb) {
+    const tableName = assertNotNull(options['<table_name>']);
+    const nycdbTableName = assertNotNull(options['<dest_nycdb_table_name>']);
+    const year = assertNotNull(options['<year>']);
+    await outputSoaFromScrapeToNycdb(tableName, year, nycdbTableName);
   }
 }
 
@@ -278,26 +288,83 @@ function scrapeRowToSoaRow(
   return {bbl, success, soaURL, rentStabilizedUnits};
 }
 
-async function outputSoaCsvFromScrape(table: string, year: string) {
-  const cache = getCacheFromEnvironment();
-  const db = databaseConnector.get();
+async function getQueryAndProgressBarForScrape(db: IDatabase<unknown, any>, table: string) {
   const total = parseInt((await db.one(`SELECT COUNT(*) FROM ${table};`)).count);
-  const csvFilename = `${table}.csv`;
-  console.log(`Writing ${Intl.NumberFormat().format(total)} rows to ${csvFilename}.`);
   const bar = new ProgressBar(':bar :percent', { total });
-  let wroteHeader = false;
   const query = new QueryStream(
     `SELECT bbl, success, info FROM ${table};`, undefined, {
       highWaterMark: 5_000,
     });
-  const toCsv = new Transform({
+
+  return {total, bar, query};
+}
+
+function scrapeRowsToSoaRows(cache: DOFCache, year: string) {
+  return new Transform({
     objectMode: true,
     transform(row: MinimalScrapeRow, enc, callback) {
+      callback(null, scrapeRowToSoaRow(cache, row, year));
+    }
+  });
+}
+
+async function outputSoaFromScrapeToNycdb(table: string, year: string, nycdbTable: string) {
+  const cache = getCacheFromEnvironment();
+  const db = databaseConnector.get();
+  const nycdb = nycdbConnector.get();
+  const highWaterMark = 5_000;
+  const {total, bar, query} = await getQueryAndProgressBarForScrape(db, table);
+  console.log(`Creating table ${nycdbTable} in NYCDB database.`);
+  // Today I learned that Postgres isn't actually case-insensitive, it
+  // just converts anything not in double quotes to lowercase! Yay!
+  await nycdb.none(`
+    DROP TABLE IF EXISTS ${nycdbTable};
+    CREATE TABLE ${nycdbTable} (
+      bbl char(10) PRIMARY KEY,
+      success boolean,
+      "rentStabilizedUnits" integer,
+      "soaURL" char(255)
+    );
+  `);
+  console.log(`Inserting ${Intl.NumberFormat().format(total)} rows.`);
+  const inserter = new BatchedPgInserter<SoaRow>({
+    db: nycdb,
+    helpers: nycdbConnector.pgp.helpers,
+    columns: {
+      bbl: '',
+      success: null,
+      rentStabilizedUnits: null,
+      soaURL: null,
+    },
+    table: parseTableName(nycdbTable),
+    highWaterMark,
+  });
+
+  await db.stream(query, s => {
+    s
+      .pipe(scrapeRowsToSoaRows(cache, year))
+      .pipe(streamingProgressBar(bar))
+      .pipe(inserter);
+  });
+
+  await inserter.ended;
+  await nycdb.$pool.end();
+  await db.$pool.end();
+}
+
+async function outputSoaFromScrapeToCsv(table: string, year: string, csvFilename: string = `${table}.csv`) {
+  const cache = getCacheFromEnvironment();
+  const db = databaseConnector.get();
+  const {total, bar, query} = await getQueryAndProgressBarForScrape(db, table);
+  console.log(`Writing ${Intl.NumberFormat().format(total)} rows to ${csvFilename}.`);
+  let wroteHeader = false;
+  const toCsv = new Transform({
+    objectMode: true,
+    transform(soa: SoaRow, enc, callback) {
       if (!wroteHeader) {
         this.push(`bbl,success,rent_stabilized_units,soa_url\n`);
         wroteHeader = true;
       }
-      const soa = scrapeRowToSoaRow(cache, row, year);
       this.push([
         soa.bbl,
         soa.success ? "t" : "f",
@@ -312,7 +379,7 @@ async function outputSoaCsvFromScrape(table: string, year: string) {
   const outfile = fs.createWriteStream(csvFilename);
 
   await db.stream(query, s => {
-    s.pipe(toCsv).pipe(outfile);
+    s.pipe(scrapeRowsToSoaRows(cache, year)).pipe(toCsv).pipe(outfile);
   });
 
   await db.$pool.end();

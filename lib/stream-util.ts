@@ -1,5 +1,5 @@
 import { Transform, Writable } from "pg-query-stream";
-import { ColumnSet, IDatabase, IHelpers } from "pg-promise";
+import { ColumnSet, IDatabase, IHelpers, ITable } from "pg-promise";
 
 /**
  * Trivial object mode transformer stream that just ticks
@@ -29,7 +29,7 @@ export type BatchedPgInserterOptions<T> = {
   columns: T,
 
   /** The table to insert rows into. */
-  table: string,
+  table: string|ITable,
 
   /**
    * Maximum number of rows to buffer internally before writing
