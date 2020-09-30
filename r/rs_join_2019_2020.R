@@ -1,3 +1,6 @@
+### This R script combines our raw SOA data for 2019 and 2020 into one table that we 
+### then load into the nycdb database (https://github.com/nycdb/nycdb)
+
 # Load tidyverse package
 library(tidyverse)
 
