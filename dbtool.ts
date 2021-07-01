@@ -5,7 +5,7 @@ import ProgressBar from 'progress';
 import QueryStream from "pg-query-stream";
 import { Transform } from "stream";
 import { databaseConnector, nycdbConnector } from './lib/db';
-import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, linkFilter, BasicPropertyInfo, getCachedSoaPdfUrl, makeLinkFilter } from './doffer';
+import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, BasicPropertyInfo, getCachedSoaPdfUrl, makeLinkFilter } from './doffer';
 import { BBL } from './lib/bbl';
 import { DOFCache, asJSONCache } from './lib/cache';
 import { defaultLog } from './lib/log';
