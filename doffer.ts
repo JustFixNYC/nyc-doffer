@@ -15,6 +15,8 @@ import { launchBrowser } from './lib/browser';
 import { Log, defaultLog } from './lib/log';
 import { S3CacheBackend } from './lib/cache-s3';
 import { S3Client } from '@aws-sdk/client-s3-node';
+import docopt from 'docopt';
+import { assertNotNull, assertNullOrInt } from './util';
 
 dotenv.config();
 
@@ -23,6 +25,42 @@ export const S3_BUCKET = process.env.S3_BUCKET || '';
 export const DISABLE_BROTLI = !!process.env.DISABLE_BROTLI;
 export const HTML_CACHE_KEY_PREFIX = process.env.HTML_CACHE_KEY_PREFIX || 'html';
 const PAGES_UNTIL_BROWSER_RESTART = 1000;
+
+const VERSION = '0.0.1';
+
+const DOC = `
+Tool for scraping the NYC DOF website.
+
+Usage:
+  doffer.js scrape <address> [--only-year=<year>] [--only-soa] [--only-nopv]
+  doffer.js -h | --help
+
+Options:
+  -h, --help         Show this screen.
+`;
+
+type CommandOptions = {
+  scrape: boolean;
+  '--only-year': string|null;
+  '--only-nopv': boolean;
+  '--only-soa': boolean;
+  '<address>': string|null;
+};
+
+export type DofferScrapeOptions = {
+  onlyYear: number|null,
+  onlySOA: boolean,
+  onlyNOPV: boolean,
+};
+
+export function makeLinkFilter({onlyNOPV, onlySOA, onlyYear}: DofferScrapeOptions): linkFilter {
+  return (link) => {
+    if (onlyYear && !link.date.startsWith(onlyYear.toString())) return false;
+    if (onlySOA && link.kind !== 'soa') return false;
+    if (onlyNOPV && link.kind !== 'nopv') return false;
+    return true;
+  };
+}
 
 export function getCacheFromEnvironment(): DOFCache {
   let cacheBackend: DOFCacheBackend;
@@ -208,17 +246,17 @@ export async function getPropertyInfoForBBLWithPageGetter(bbl: BBL, cache: DOFCa
   return {bbl: bbl.toString(), nopv, soa};
 }
 
-async function getPropertyInfoForBBL(bbl: BBL, name: string, borough: string, cache: DOFCache, log: Log = defaultLog): Promise<PropertyInfo> {
+async function getPropertyInfoForBBL(bbl: BBL, name: string, borough: string, cache: DOFCache, log: Log = defaultLog, filter: linkFilter = defaultLinkFilter): Promise<PropertyInfo> {
   const pageGetter = new PageGetter(log);
 
   try {
-    return {...await getPropertyInfoForBBLWithPageGetter(bbl, cache, pageGetter), name, borough};
+    return {...await getPropertyInfoForBBLWithPageGetter(bbl, cache, pageGetter, filter), name, borough};
   } finally {
     await pageGetter.shutdown();
   }
 }
 
-export async function getPropertyInfoForAddress(address: string, cache: DOFCache, log: Log = defaultLog): Promise<PropertyInfo> {
+export async function getPropertyInfoForAddress(address: string, cache: DOFCache, log: Log = defaultLog, filter: linkFilter = defaultLinkFilter): Promise<PropertyInfo> {
   const geo = await cachedGeoSearch(address, cache, log);
   if (!geo) {
     throw new GracefulError("The search text is invalid.");
@@ -227,15 +265,15 @@ export async function getPropertyInfoForAddress(address: string, cache: DOFCache
 
   log(`Searching NYC DOF website for BBL ${bbl} (${geo.name}, ${geo.borough}).`);
 
-  return getPropertyInfoForBBL(bbl, geo.name, geo.borough, cache, log);
+  return getPropertyInfoForBBL(bbl, geo.name, geo.borough, cache, log, filter);
 }
 
-export async function mainWithSearchText(searchText: string, log: Log = defaultLog) {
+async function scrape(searchText: string, log: Log = defaultLog, filter: linkFilter = defaultLinkFilter) {
   const cache = getCacheFromEnvironment();
   console.log(`Using cache ${cache.description}.`);
   const rtfl = new Intl.RelativeTimeFormat('en');
   const start = Date.now();
-  const {nopv, soa} = await getPropertyInfoForAddress(searchText, cache, log);
+  const {nopv, soa} = await getPropertyInfoForAddress(searchText, cache, log, filter);
   for (let {period, noi} of nopv) {
     if (noi) {
       log(`The net operating income for ${period} is ${noi}.`);
@@ -253,14 +291,18 @@ export async function mainWithSearchText(searchText: string, log: Log = defaultL
 }
 
 /** The main CLI program. */
-async function main(argv: string[], log: Log = defaultLog) {
-  const searchText = argv[2];
+async function main(log: Log = defaultLog) {
+  const options: CommandOptions = docopt.docopt(DOC, {version: VERSION});
 
-  if (!searchText) {
-    throw new GracefulError(`Usage: doffer.js <search text>`);
+  if (options.scrape) {
+    const searchText = assertNotNull(options['<address>']);
+
+    return scrape(searchText, log, makeLinkFilter({
+      onlyYear: assertNullOrInt(options['--only-year']),
+      onlyNOPV: options['--only-nopv'],
+      onlySOA: options['--only-soa'],
+    }));
   }
-
-  return mainWithSearchText(searchText, log);
 }
 
 /** Error subclass that represents a graceful failure of the CLI. */
@@ -268,7 +310,7 @@ export class GracefulError extends Error {
 }
 
 if (module.parent === null) {
-  main(process.argv).catch(e => {
+  main().catch(e => {
     if (e instanceof GracefulError) {
       e.message && console.log(e.message);
     } else {

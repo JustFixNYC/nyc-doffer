@@ -5,13 +5,14 @@ import ProgressBar from 'progress';
 import QueryStream from "pg-query-stream";
 import { Transform } from "stream";
 import { databaseConnector, nycdbConnector } from './lib/db';
-import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, linkFilter, BasicPropertyInfo, getCachedSoaPdfUrl } from './doffer';
+import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, BasicPropertyInfo, getCachedSoaPdfUrl, makeLinkFilter } from './doffer';
 import { BBL } from './lib/bbl';
 import { DOFCache, asJSONCache } from './lib/cache';
 import { defaultLog } from './lib/log';
 import { BatchedPgInserter, streamingProgressBar } from './lib/stream-util';
 import { IDatabase } from 'pg-promise';
 import { parseTableName } from './lib/util';
+import { assertNotNull, assertNullOrInt, getPositiveInt } from './util';
 
 dotenv.config();
 
@@ -60,30 +61,6 @@ type CommandOptions = {
   '<table_name>': string|null;
   '<year>': string|null;
 };
-
-function assertNullOrInt(value: string|null): number|null {
-  if (value === null) return null;
-  const num = parseInt(value);
-  if (isNaN(num)) {
-    throw new Error(`${value} is not a number!`);
-  }
-  return num;
-}
-
-function assertNotNull<T>(value: T|null): T {
-  if (value === null) {
-    throw new Error(`Assertion failure!`);
-  }
-  return value;
-}
-
-function getPositiveInt(value: string): number {
-  const num = parseInt(value);
-  if (isNaN(num) || num <= 0) {
-    throw new Error(`'${value}' must be a positive integer!`);
-  }
-  return num;
-}
 
 async function main() {
   const options: CommandOptions = docopt.docopt(DOC, {version: VERSION});
@@ -386,19 +363,14 @@ async function outputSoaFromScrapeToCsv(table: string, year: string, csvFilename
 }
 
 async function scrapeBBLsInTable(table: string, options: ScrapeOptions) {
-  const {onlyYear, onlySOA, onlyNOPV, concurrency} = options;
+  const {concurrency} = options;
   const db = databaseConnector.get();
   const pageGetters: PageGetter[] = [];
   for (let i = 0; i < concurrency; i++) {
     pageGetters.push(new PageGetter(defaultLog, !options.noBrowser));
   }
   const cache = getCacheFromEnvironment();
-  const filter: linkFilter = (link) => {
-    if (onlyYear && !link.date.startsWith(onlyYear.toString())) return false;
-    if (onlySOA && link.kind !== 'soa') return false;
-    if (onlyNOPV && link.kind !== 'nopv') return false;
-    return true;
-  };
+  const filter = makeLinkFilter(options);
   const statusKey = statusKeyForScrape(table)
   console.log(`Using cache ${cache.description}.`);
   while (true) {
