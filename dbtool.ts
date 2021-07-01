@@ -12,6 +12,7 @@ import { defaultLog } from './lib/log';
 import { BatchedPgInserter, streamingProgressBar } from './lib/stream-util';
 import { IDatabase } from 'pg-promise';
 import { parseTableName } from './lib/util';
+import { assertNotNull, assertNullOrInt, getPositiveInt } from './util';
 
 dotenv.config();
 
@@ -60,30 +61,6 @@ type CommandOptions = {
   '<table_name>': string|null;
   '<year>': string|null;
 };
-
-function assertNullOrInt(value: string|null): number|null {
-  if (value === null) return null;
-  const num = parseInt(value);
-  if (isNaN(num)) {
-    throw new Error(`${value} is not a number!`);
-  }
-  return num;
-}
-
-function assertNotNull<T>(value: T|null): T {
-  if (value === null) {
-    throw new Error(`Assertion failure!`);
-  }
-  return value;
-}
-
-function getPositiveInt(value: string): number {
-  const num = parseInt(value);
-  if (isNaN(num) || num <= 0) {
-    throw new Error(`'${value}' must be a positive integer!`);
-  }
-  return num;
-}
 
 async function main() {
   const options: CommandOptions = docopt.docopt(DOC, {version: VERSION});
