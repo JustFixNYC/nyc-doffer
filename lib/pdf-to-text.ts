@@ -7,7 +7,7 @@ import tmp from 'tmp';
  * 
  * NOTE: If you ever change this, make sure to update README.md too!
  */
-export const EXPECTED_PDFTOTEXT_VERSION = '4.02';
+export const EXPECTED_PDFTOTEXT_VERSION = '4.03';
 
 const VERSION_REGEX = /pdftotext version ([\d.]+)/;
 
