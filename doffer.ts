@@ -24,6 +24,21 @@ export const DISABLE_BROTLI = !!process.env.DISABLE_BROTLI;
 export const HTML_CACHE_KEY_PREFIX = process.env.HTML_CACHE_KEY_PREFIX || 'html';
 const PAGES_UNTIL_BROWSER_RESTART = 1000;
 
+export type DofferScrapeOptions = {
+  onlyYear: number|null,
+  onlySOA: boolean,
+  onlyNOPV: boolean,
+};
+
+export function makeLinkFilter({onlyNOPV, onlySOA, onlyYear}: DofferScrapeOptions): linkFilter {
+  return (link) => {
+    if (onlyYear && !link.date.startsWith(onlyYear.toString())) return false;
+    if (onlySOA && link.kind !== 'soa') return false;
+    if (onlyNOPV && link.kind !== 'nopv') return false;
+    return true;
+  };
+}
+
 export function getCacheFromEnvironment(): DOFCache {
   let cacheBackend: DOFCacheBackend;
 

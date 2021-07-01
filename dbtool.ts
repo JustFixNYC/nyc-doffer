@@ -5,7 +5,7 @@ import ProgressBar from 'progress';
 import QueryStream from "pg-query-stream";
 import { Transform } from "stream";
 import { databaseConnector, nycdbConnector } from './lib/db';
-import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, linkFilter, BasicPropertyInfo, getCachedSoaPdfUrl } from './doffer';
+import { PageGetter, getCacheFromEnvironment, getPropertyInfoForBBLWithPageGetter, linkFilter, BasicPropertyInfo, getCachedSoaPdfUrl, makeLinkFilter } from './doffer';
 import { BBL } from './lib/bbl';
 import { DOFCache, asJSONCache } from './lib/cache';
 import { defaultLog } from './lib/log';
@@ -386,19 +386,14 @@ async function outputSoaFromScrapeToCsv(table: string, year: string, csvFilename
 }
 
 async function scrapeBBLsInTable(table: string, options: ScrapeOptions) {
-  const {onlyYear, onlySOA, onlyNOPV, concurrency} = options;
+  const {concurrency} = options;
   const db = databaseConnector.get();
   const pageGetters: PageGetter[] = [];
   for (let i = 0; i < concurrency; i++) {
     pageGetters.push(new PageGetter(defaultLog, !options.noBrowser));
   }
   const cache = getCacheFromEnvironment();
-  const filter: linkFilter = (link) => {
-    if (onlyYear && !link.date.startsWith(onlyYear.toString())) return false;
-    if (onlySOA && link.kind !== 'soa') return false;
-    if (onlyNOPV && link.kind !== 'nopv') return false;
-    return true;
-  };
+  const filter = makeLinkFilter(options);
   const statusKey = statusKeyForScrape(table)
   console.log(`Using cache ${cache.description}.`);
   while (true) {
