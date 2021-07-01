@@ -40,7 +40,7 @@ run `yarn watch` in a separate terminal.
 You can run the tool by passing it an address to search for, e.g.:
 
 ```
-node doffer.js scrape "654 park place, brooklyn"
+node doffer.js scrape "654 park place, brooklyn" --only-soa --only-year=2021
 ```
 
 ## Environment variables
