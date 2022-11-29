@@ -1,5 +1,5 @@
 export function extractRentStabilizedUnits(text: string): number|null {
-  const re = /(?:Housing-Rent\s+Stabilization|Rent\s+Stabilization\s+Fee-\s+Chg)\s+(\d+)/ig;
+  const re = /(?:Housing-Rent\s+Stabilization|Rent\s+Stabilization(?:\s+Fee)?-\s+Chg)\s+(\d+)/ig;
   let total = 0;
   let match: RegExpExecArray|null = null;
 
