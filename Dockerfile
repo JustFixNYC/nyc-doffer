@@ -1,6 +1,6 @@
 FROM node:12.10.0
 
-ARG XPDF_VERSION=4.03
+ARG XPDF_VERSION=4.04
 
 # https://github.com/Googlechrome/puppeteer/issues/290#issuecomment-322838700
 RUN apt-get update && apt-get install -y \
@@ -44,7 +44,8 @@ RUN apt-get update && apt-get install -y \
     wget \
   && rm -rf /var/lib/apt/lists/*
 
-RUN curl https://dl.xpdfreader.com/xpdf-tools-linux-${XPDF_VERSION}.tar.gz > /xpdf.tar.gz \
+RUN apt-get update && apt-get upgrade -y \
+  && curl https://dl.xpdfreader.com/xpdf-tools-linux-${XPDF_VERSION}.tar.gz > /xpdf.tar.gz \
   && tar -zxvf /xpdf.tar.gz \
   && cp xpdf-tools-linux-${XPDF_VERSION}/bin64/pdftotext /bin \
   && rm -rf xpdf-tools-linux-${XPDF_VERSION} \
