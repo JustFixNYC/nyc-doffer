@@ -36,7 +36,7 @@
     "cheerio": "^1.0.0-rc.3",
     "docopt": "^0.6.2",
     "dotenv": "^8.1.0",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "mime": "^2.4.4",
     "parcel-bundler": "^1.12.3",
     "pg": "^8.3.2",
