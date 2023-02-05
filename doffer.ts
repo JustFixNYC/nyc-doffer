@@ -201,24 +201,16 @@ async function getNOPVInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache, fi
 // For 2021 scrape we discovered corrupted PDF files that can't be opened and
 // convert to empty text files. The scraped results look the same as a
 // successful scrape for a property with no rent stabilized units. Now we check
-// the text and if it's empty we delete our cached DF and TXT files and throw an
+// the text and if it's empty we delete our cached PDF and TXT files and throw an
 // error that will get logged in the database. Then we can use the same method
 // of clearing errors to scrape again.
 
 /** If page text is empty (indicates corrupted PDF download), deletes cached PDF and TXT files and throws error */
-function assertSuccessfulDownloads(
-  pageText: string,
-  bbl: BBL,
-  cache: DOFCache,
-  cacheSubkey: string,
-  extraFlags?: PDFToTextFlags[]
-): void {
+function assertSuccessfulDownloads(pageText: string, bbl: BBL, cache: DOFCache, cacheSubkey: string, extraFlags?: PDFToTextFlags[]): void {
   if (!pageText.length) {
     const pdfToTextKey = `pdftotext-${EXPECTED_PDFTOTEXT_VERSION}` + (extraFlags || []).join("");
     cache.delete(`pdf/${bbl.asPath()}/${cacheSubkey}.pdf`);
     cache.delete(`txt/${bbl.asPath()}/${cacheSubkey}_${pdfToTextKey}.txt`);
-    // NOTE: Do not change this error message, we currently search for
-    // it in SQL queries in dbtool.ts!
     throw new Error(`DOF PDF download for BBL ${bbl} was corrupted`);
   }
 }
