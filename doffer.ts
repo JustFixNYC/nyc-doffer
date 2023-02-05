@@ -243,7 +243,6 @@ async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache, fil
   const page = SidebarLinkName.propertyTaxBills;
   const html = await pageGetter.cachedGetPageHTML(bbl, page, cache, 'soa');
   const links = parseSOALinks(html).filter(filter);
-  console.log({links})
 
   for (let link of links) {
     if (link.quarter !== 1) continue;
@@ -252,7 +251,6 @@ async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache, fil
     const cacheSubkey = `soa-${link.date}`;
     const extraFlags: PDFToTextFlags[] = ["-table"];
     const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, name, cache, cacheSubkey, extraFlags);
-    console.log({bbl, text});
     assertSuccessfulDownloads(text, bbl, cache, cacheSubkey, extraFlags);
     const rentStabilizedUnits = extractRentStabilizedUnits(text);
 
