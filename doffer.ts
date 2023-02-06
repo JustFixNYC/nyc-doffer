@@ -187,12 +187,32 @@ async function getNOPVInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache, fi
 
   for (let link of links) {
     const name = `${link.date} NOPV for BBL ${bbl}`;
-    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, name, cache, `nopv-${link.date}`, ['-layout']);
+    const cacheSubkey = `nopv-${link.date}`;
+    const extraFlags: PDFToTextFlags[] = ["-layout"];
+    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, name, cache, cacheSubkey, extraFlags);
+    assertSuccessfulDownloads(text, bbl, cache, cacheSubkey, extraFlags);
     const noi = extractNetOperatingIncome(text);
     results.push({...link, noi});
   }
 
   return results;
+}
+
+// For 2021 scrape we discovered corrupted PDF files that can't be opened and
+// convert to empty text files. The scraped results look the same as a
+// successful scrape for a property with no rent stabilized units. Now we check
+// the text and if it's empty we delete our cached PDF and TXT files and throw an
+// error that will get logged in the database. Then we can use the same method
+// of clearing errors to scrape again.
+
+/** If page text is empty (indicates corrupted PDF download), deletes cached PDF and TXT files and throws error */
+function assertSuccessfulDownloads(pageText: string, bbl: BBL, cache: DOFCache, cacheSubkey: string, extraFlags?: PDFToTextFlags[]): void {
+  if (!pageText.length) {
+    const pdfToTextKey = `pdftotext-${EXPECTED_PDFTOTEXT_VERSION}` + (extraFlags || []).join("");
+    cache.delete(`pdf/${bbl.asPath()}/${cacheSubkey}.pdf`);
+    cache.delete(`txt/${bbl.asPath()}/${cacheSubkey}_${pdfToTextKey}.txt`);
+    throw new Error(`DOF PDF download for BBL ${bbl} was corrupted`);
+  }
 }
 
 type SOAInfo = SOALink & {
@@ -228,7 +248,10 @@ async function getSOAInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache, fil
     if (link.quarter !== 1) continue;
 
     const name = `${link.date} Q1 SOA for BBL ${bbl}`;
-    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, name, cache, `soa-${link.date}`, ['-table']);
+    const cacheSubkey = `soa-${link.date}`;
+    const extraFlags: PDFToTextFlags[] = ["-table"];
+    const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, name, cache, cacheSubkey, extraFlags);
+    assertSuccessfulDownloads(text, bbl, cache, cacheSubkey, extraFlags);
     const rentStabilizedUnits = extractRentStabilizedUnits(text);
 
     results.push({...link, rentStabilizedUnits});
@@ -261,7 +284,7 @@ export async function getPropertyInfoForAddress(address: string, cache: DOFCache
   if (!geo) {
     throw new GracefulError("The search text is invalid.");
   }
-  const bbl = BBL.from(geo.pad_bbl);
+  const bbl = BBL.from(geo.addendum.pad.bbl);
 
   log(`Searching NYC DOF website for BBL ${bbl} (${geo.name}, ${geo.borough}).`);
 

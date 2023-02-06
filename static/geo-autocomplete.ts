@@ -5,7 +5,7 @@ import { GeoSearchResults } from "../lib/geosearch";
  *
  * https://geosearch.planninglabs.nyc/docs/#autocomplete
  */
-export const GEO_AUTOCOMPLETE_URL = 'https://geosearch.planninglabs.nyc/v1/autocomplete';
+export const GEO_AUTOCOMPLETE_URL = 'https://geosearch.planninglabs.nyc/v2/autocomplete';
 
 /**
  * Options for the requester constructor.

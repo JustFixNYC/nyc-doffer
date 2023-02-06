@@ -6,11 +6,11 @@ import { GEO_AUTOCOMPLETE_URL } from "../static/geo-autocomplete";
  * if/where they are formally specified.
  */
 export enum GeoSearchBoroughGid {
-  Manhattan = 'whosonfirst:borough:1',
-  Bronx = 'whosonfirst:borough:2',
-  Brooklyn = 'whosonfirst:borough:3',
-  Queens = 'whosonfirst:borough:4',
-  StatenIsland = 'whosonfirst:borough:5',
+  Manhattan = 'whosonfirst:borough:421205771',
+  Bronx = 'whosonfirst:borough:421205773',
+  Brooklyn = 'whosonfirst:borough:421205765',
+  Queens = 'whosonfirst:borough:421205767',
+  StatenIsland = 'whosonfirst:borough:421205775',
 }
 
 /**
@@ -52,8 +52,15 @@ export interface GeoSearchProperties {
   /** e.g. "150 COURT STREET, Brooklyn, New York, NY, USA" */
   label: string;
 
-  /** e.g., "3012380016" */
-  pad_bbl: string;
+  /**
+   * The 10-digit padded Borough-Block-Lot (BBL) number for the
+   * property, e.g. "3002920026".
+   */
+  addendum: {
+    pad: {
+      bbl: string;
+    };
+  };
 }
 
 /**
