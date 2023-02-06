@@ -187,8 +187,8 @@ async function getNOPVInfo(pageGetter: PageGetter, bbl: BBL, cache: DOFCache, fi
 
   for (let link of links) {
     const name = `${link.date} NOPV for BBL ${bbl}`;
-    const cacheSubkey = `soa-${link.date}`;
-    const extraFlags: PDFToTextFlags[] = ["-table"];
+    const cacheSubkey = `nopv-${link.date}`;
+    const extraFlags: PDFToTextFlags[] = ["-layout"];
     const text = await pageGetter.cachedDownloadAndConvertPDFToText(bbl, link.url, name, cache, cacheSubkey, extraFlags);
     assertSuccessfulDownloads(text, bbl, cache, cacheSubkey, extraFlags);
     const noi = extractNetOperatingIncome(text);
