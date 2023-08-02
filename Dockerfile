@@ -2,6 +2,15 @@ FROM node:12.10.0
 
 ARG XPDF_VERSION=4.04
 
+# https://stackoverflow.com/a/76095392/7051239
+RUN sed -i -e 's/deb.debian.org/archive.debian.org/g' \
+           -e 's|security.debian.org|archive.debian.org/|g' \
+           -e '/stretch-updates/d' /etc/apt/sources.list
+
+# https://grigorkh.medium.com/fix-tzdata-hangs-docker-image-build-cdb52cc3360d
+ENV TZ=America/New_York
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
 # https://github.com/Googlechrome/puppeteer/issues/290#issuecomment-322838700
 RUN apt-get update && apt-get install -y \
     gconf-service \
