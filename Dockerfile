@@ -53,7 +53,7 @@ RUN apt-get update && apt-get install -y \
     wget \
   && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get upgrade -y \
+RUN apt-get update -y \
   && curl https://dl.xpdfreader.com/xpdf-tools-linux-${XPDF_VERSION}.tar.gz > /xpdf.tar.gz \
   && tar -zxvf /xpdf.tar.gz \
   && cp xpdf-tools-linux-${XPDF_VERSION}/bin64/pdftotext /bin \
