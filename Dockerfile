@@ -1,6 +1,6 @@
 FROM node:12.10.0
 
-ARG XPDF_VERSION=4.04
+ARG XPDF_VERSION=4.05
 
 # https://stackoverflow.com/a/76095392/7051239
 RUN sed -i -e 's/deb.debian.org/archive.debian.org/g' \
