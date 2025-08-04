@@ -29,8 +29,8 @@ const MULTI_RENTSTAB_TOTAL = 96 + 95 + 105 + 105; // excludes last duplicate cha
 
 describe('extractRentStabilizedUnits()', () => {
   const textAndUnits: [string, number|null][] = [
-    ['Rent Stabilization Fee- Chg      103 01/01/2020', 103],
-    ['Housing-Rent Stabilization       15', 15],
+    ['Rent Stabilization Fee- Chg      103 01/01/2020   22571300', 103],
+    ['Housing-Rent Stabilization       15    22571500', 15],
     ['blahh', null],
   ];
 
