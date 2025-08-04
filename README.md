@@ -11,14 +11,14 @@ metrics from the statements if needed.
 
 ## Installation
 
-You will need `pdftotext` version 4.04 on your path, or defined via the
+You will need `pdftotext` version 4.05 on your path, or defined via the
 `PDFTOTEXT` environment variable (if an `.env` file is found in the root directory
 of the repository, it will be loaded). You can obtain it by downloading
 and installing one of the following:
 
-* [Xpdf command line tools (Linux)](https://dl.xpdfreader.com/xpdf-tools-linux-4.04.tar.gz)
-* [Xpdf command line tools (Windows)](https://dl.xpdfreader.com/xpdf-tools-win-4.04.zip)
-* [Xpdf command line tools (OS X)](https://dl.xpdfreader.com/xpdf-tools-mac-4.04.tar.gz)
+* [Xpdf command line tools (Linux)](https://dl.xpdfreader.com/xpdf-tools-linux-4.05.tar.gz)
+* [Xpdf command line tools (Windows)](https://dl.xpdfreader.com/xpdf-tools-win-4.05.zip)
+* [Xpdf command line tools (OS X)](https://dl.xpdfreader.com/xpdf-tools-mac-4.05.tar.gz)
 
 You may want to create an `.env` file to configure environment variables. This
 can be done by copying the sample file and editing it as needed:
