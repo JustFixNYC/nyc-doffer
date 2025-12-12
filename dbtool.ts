@@ -384,6 +384,7 @@ async function scrapeBBLsInTable(table: string, options: ScrapeOptions) {
       let info: BasicPropertyInfo|null = null;
       try {
         info = await getPropertyInfoForBBLWithPageGetter(BBL.from(row.bbl), cache, pageGetter, filter);
+        console.log(info)
         success = true;
       } catch (e) {
         console.error(e);
