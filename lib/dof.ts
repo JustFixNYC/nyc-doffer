@@ -167,6 +167,9 @@ export function parseSOALinks(html: string): SOALink[] {
     console.log({link})
     if (!link) return;
     const match = $(link).text().trim().match(/^Q([1-4]): (.*)$/);
+    const match2 = $(link).text().trim().match(/^\s*Q([1-4]): (.*)$/);
+    console.log({linkText:$(link).text().trim()})
+    console.log({match2})
     console.log({match})
     if (!match) return;
     const quarter = parseInt(match[1]);
