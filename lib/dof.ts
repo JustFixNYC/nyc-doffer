@@ -170,6 +170,8 @@ export function parseSOALinks(html: string): SOALink[] {
     const linkMatch = $(link).text().trim().match(/^(:?Q([1-4]): )?(.*)$/);
     console.log({linkMatch})
     if (!linkMatch) return;
+    const quarterCell = $(cells[1])
+    console.log({quarterCell})
     const quarterMatch = $(cells[1]).text().trim().match(/Q([1-4])/)
     const quarter = !!quarterMatch ? parseInt(quarterMatch[1]) : parseInt(linkMatch[1]);
     const date = parseDate(linkMatch[2].trim());
