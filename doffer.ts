@@ -425,7 +425,6 @@ async function scrape(
 ) {
   const cache = getCacheFromEnvironment();
   console.log(`Using cache ${cache.description}.`);
-  console.log("doffer.ts test")
   const rtfl = new Intl.RelativeTimeFormat("en");
   const start = Date.now();
   const { nopv, soa } = await getPropertyInfoForAddress(
