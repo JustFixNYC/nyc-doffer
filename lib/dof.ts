@@ -171,6 +171,9 @@ export function parseSOALinks(html: string): SOALink[] {
     console.log({linkMatch})
     if (!linkMatch) return;
     const quarterCell = $(cells[1])
+    console.log({periodCell:cells[0]})
+    console.log({periodCell:$(cells[0])})
+    console.log({quarterCell:cells[1]})
     console.log({quarterCell})
     const quarterMatch = $(cells[1]).text().trim().match(/Q([1-4])/)
     const quarter = !!quarterMatch ? parseInt(quarterMatch[1]) : parseInt(linkMatch[1]);
