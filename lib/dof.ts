@@ -161,12 +161,22 @@ export function parseSOALinks(html: string): SOALink[] {
     if (cells.length < 3) return;
     const period = $(cells[0]).text().trim();
     if (!period) return;
+    // starting for 2025 the table format changed to remove the quarter to what was
+    // previously an empty cell between period and date/link. Since we cache this html
+    // page and may want to extract new data without re-downloading we need to
+    // handle both versions.
+    const quarterCellText = $(cells[1]).text()
+    let quarterNew
+    if (quarterCellText) {
+        const quarterMatch = quarterCellText.trim().match(/Q([1-4])/)
+        quarterNew = quarterMatch && parseInt(quarterMatch[1])
+    }
     const link = $('a', cells[2])[0];
     if (!link) return;
-    const match = $(link).text().trim().match(/^Q([1-4]): (.*)$/);
-    if (!match) return;
-    const quarter = parseInt(match[1]);
-    const date = parseDate(match[2].trim());
+    const linkMatch = $(link).text().trim().match(/^Q?([1-4])?(.*)$/);
+    if (!linkMatch) return;
+    const quarter = quarterNew || parseInt(linkMatch[1])
+    const date = parseDate(linkMatch[2].trim());
     const url = link.attribs['href'];
     if (!date || !url) return;
     links.push({kind: 'soa', period, quarter, date: getISODate(date), url});
