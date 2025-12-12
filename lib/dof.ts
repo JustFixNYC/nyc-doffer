@@ -155,7 +155,7 @@ export type SOALink = {
 export function parseSOALinks(html: string): SOALink[] {
   const links: SOALink[] = [];
   const $ = cheerio.load(html);
-
+  console.log(html)
   $('table[id="Property Tax Bills"] tr').each((i, el) => {
     console.log(JSON.stringify(el))
     const cells = $('td', el);
