@@ -165,17 +165,17 @@ export function parseSOALinks(html: string): SOALink[] {
     if (cells.length < 3) return;
     const period = $(cells[0]).text().trim();
     if (!period) return;
-    const link = $('a', cells[2])[0];
-    if (!link) return;
-    const linkMatch = $(link).text().trim().match(/^(:?Q([1-4]): )?(.*)$/);
-    console.log({linkMatch})
-    if (!linkMatch) return;
     const quarterCellText = $(cells[1]).text()
     let quarterNew
     if (quarterCellText) {
         const quarterMatch = quarterCellText.trim().match(/Q([1-4])/)
         quarterNew = quarterMatch && parseInt(quarterMatch[1])
     }
+    const link = $('a', cells[2])[0];
+    if (!link) return;
+    const linkMatch = $(link).text().trim().match(/^Q?([1-4])?(.*)$/);
+    console.log({linkMatch})
+    if (!linkMatch) return;
     const quarter = quarterNew || parseInt(linkMatch[1])
     const date = parseDate(linkMatch[2].trim());
     const url = link.attribs['href'];
