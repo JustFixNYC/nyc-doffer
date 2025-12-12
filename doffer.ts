@@ -334,7 +334,8 @@ async function getSOAInfo(
   const page = SidebarLinkName.propertyTaxBills;
   const html = await pageGetter.cachedGetPageHTML(bbl, page, cache, "soa");
   const links = parseSOALinks(html).filter(filter);
-  console.log(JSON.stringify(links))
+
+  console.log({linkUrls: links.forEach(link => link.url)})
 
   for (let link of links) {
     if (link.quarter !== 1) continue;
