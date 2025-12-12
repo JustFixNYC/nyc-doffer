@@ -156,24 +156,23 @@ export function parseSOALinks(html: string): SOALink[] {
   const links: SOALink[] = [];
   const $ = cheerio.load(html);
 
+  // starting for 2025 the table format changed to remove the quarter to what was
+  // previously an empty cell between period and date/link. Since we cache this html
+  // page and may want to extract new data without re-downloading we need to
+  // handle both versions.
   $('table[id="Property Tax Bills"] tr').each((i, el) => {
     const cells = $('td', el);
-    console.log({cellsLength: cells.length})
     if (cells.length < 3) return;
     const period = $(cells[0]).text().trim();
-    console.log({period})
     if (!period) return;
     const link = $('a', cells[2])[0];
-    console.log({link})
     if (!link) return;
-    const match = $(link).text().trim().match(/^Q([1-4]): (.*)$/);
-    const match2 = $(link).text().trim().match(/^\s*Q([1-4]): (.*)$/);
-    console.log({linkText:$(link).text().trim()})
-    console.log({match2})
-    console.log({match})
-    if (!match) return;
-    const quarter = parseInt(match[1]);
-    const date = parseDate(match[2].trim());
+    const linkMatch = $(link).text().trim().match(/^(:?Q([1-4]): )?(.*)$/);
+    console.log({linkMatch})
+    if (!linkMatch) return;
+    const quarterMatch = $(cells[1]).text().trim().match(/Q([1-4])/)
+    const quarter = !!quarterMatch ? parseInt(quarterMatch[1]) : parseInt(linkMatch[1]);
+    const date = parseDate(linkMatch[2].trim());
     const url = link.attribs['href'];
     console.log({quarter, date, url})
     if (!date || !url) return;
