@@ -156,15 +156,15 @@ export function parseSOALinks(html: string): SOALink[] {
   const links: SOALink[] = [];
   const $ = cheerio.load(html);
 
-  // starting for 2025 the table format changed to remove the quarter to what was
-  // previously an empty cell between period and date/link. Since we cache this html
-  // page and may want to extract new data without re-downloading we need to
-  // handle both versions.
   $('table[id="Property Tax Bills"] tr').each((i, el) => {
     const cells = $('td', el);
     if (cells.length < 3) return;
     const period = $(cells[0]).text().trim();
     if (!period) return;
+    // starting for 2025 the table format changed to remove the quarter to what was
+    // previously an empty cell between period and date/link. Since we cache this html
+    // page and may want to extract new data without re-downloading we need to
+    // handle both versions.
     const quarterCellText = $(cells[1]).text()
     let quarterNew
     if (quarterCellText) {
@@ -174,12 +174,10 @@ export function parseSOALinks(html: string): SOALink[] {
     const link = $('a', cells[2])[0];
     if (!link) return;
     const linkMatch = $(link).text().trim().match(/^Q?([1-4])?(.*)$/);
-    console.log({linkMatch})
     if (!linkMatch) return;
     const quarter = quarterNew || parseInt(linkMatch[1])
     const date = parseDate(linkMatch[2].trim());
     const url = link.attribs['href'];
-    console.log({quarter, date, url})
     if (!date || !url) return;
     links.push({kind: 'soa', period, quarter, date: getISODate(date), url});
   });
