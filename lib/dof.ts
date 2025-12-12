@@ -157,6 +157,7 @@ export function parseSOALinks(html: string): SOALink[] {
   const $ = cheerio.load(html);
 
   $('table[id="Property Tax Bills"] tr').each((i, el) => {
+    console.log(JSON.stringify(el))
     const cells = $('td', el);
     if (cells.length < 3) return;
     const period = $(cells[0]).text().trim();
