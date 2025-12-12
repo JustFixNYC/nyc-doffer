@@ -373,6 +373,7 @@ async function scrapeBBLsInTable(table: string, options: ScrapeOptions) {
   const filter = makeLinkFilter(options);
   const statusKey = statusKeyForScrape(table)
   console.log(`Using cache ${cache.description}.`);
+  console.log("log test");
   while (true) {
     const rows: {bbl: string}[] = await db.manyOrNone(`SELECT bbl FROM ${table} WHERE success IS NULL LIMIT ${concurrency};`);
     if (rows.length === 0) break;
