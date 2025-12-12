@@ -158,17 +158,20 @@ export function parseSOALinks(html: string): SOALink[] {
 
   $('table[id="Property Tax Bills"] tr').each((i, el) => {
     const cells = $('td', el);
-    console.log(cells)
+    console.log(cells.length)
     if (cells.length < 3) return;
     const period = $(cells[0]).text().trim();
     if (!period) return;
     const link = $('a', cells[2])[0];
+    console.log(link)
     if (!link) return;
     const match = $(link).text().trim().match(/^Q([1-4]): (.*)$/);
+    console.log(match)
     if (!match) return;
     const quarter = parseInt(match[1]);
     const date = parseDate(match[2].trim());
     const url = link.attribs['href'];
+    console.log({quarter, date, url})
     if (!date || !url) return;
     links.push({kind: 'soa', period, quarter, date: getISODate(date), url});
   });
